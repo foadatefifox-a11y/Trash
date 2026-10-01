@@ -1,0 +1,55 @@
+/*
+  NEVER FINISHED
+  style.css: de vormgeving van je overzicht en al je edities.
+
+  Een CSS-regel werkt zo:
+
+    selector {
+      eigenschap: waarde;
+    }
+
+  De selector zegt WAT je vormgeeft (h1, .edities, time).
+  De eigenschap zegt WELK aspect (font-size, color, margin).
+  De waarde zegt HOE (2rem, black, 0).
+
+  Elke editie heeft een eigen class op <body>: .editie-01, .editie-02, ...
+  Zo kun je per editie andere regels schrijven zonder de andere te raken:
+
+    .editie-01 h1 { font-size: 12vw; }
+
+  Vaste regel tot les 05: geen position: absolute. Vanaf les 05 is positie de inhoud.
+*/
+
+body {
+  /* Het lettertype van het systeem van de lezer. Geen download nodig. */
+  font-family: system-ui, sans-serif;
+  line-height: 1.4;
+  margin: 0;
+  padding: 1rem;
+}
+
+a {
+  color: inherit;
+}
+
+/* Overzicht */
+
+.edities {
+  list-style: none;
+  padding: 0;
+}
+
+.edities a {
+  display: flex;
+  gap: 1rem;
+  text-decoration: none;
+}
+
+/* Editie 01. Focus: het scherm.
+   100vh is de hoogte van het venster. Deze pagina mag niet hoger worden dan dat.
+   Tip: vraag AI wat clamp() doet met een lettergrootte. */
+
+.editie-01 {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
