@@ -21,6 +21,8 @@
 */
 
 body {
+  background-color: #000;
+  color: #fff;
   /* Het lettertype van het systeem van de lezer. Geen download nodig. */
   font-family: system-ui, sans-serif;
   line-height: 1.4;
