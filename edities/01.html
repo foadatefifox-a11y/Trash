@@ -51,7 +51,7 @@
     }
     .material span {
       display: block;
-      transition: filter 220ms ease;
+      transition: filter 220ms ease, -webkit-text-stroke-width 160ms linear;
       pointer-events: none;
     }
     .material[aria-pressed="false"] span {
@@ -169,6 +169,7 @@
       materials.forEach(button => {
         if (button.getAttribute('aria-pressed') !== 'true') {
           button.style.removeProperty('font-size');
+          button.querySelector('span').style.removeProperty('-webkit-text-stroke-width');
           return;
         }
         const style = getComputedStyle(button);
@@ -181,6 +182,9 @@
         const fitHeight = button.clientHeight / 1.25;
         const size = Math.max(1, Math.min(fitWidth, fitHeight));
         button.style.fontSize = size + 'px';
+        const minimumStroke = touchScreen.matches || window.innerWidth <= 600 ? 0.65 : 0.3;
+        const stroke = minimumStroke + Math.max(0, size - 40) / 100 * (4 / 3);
+        button.querySelector('span').style.webkitTextStrokeWidth = stroke + 'px';
       });
     }
     updateTypography();
