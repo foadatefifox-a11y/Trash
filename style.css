@@ -55,3 +55,56 @@ a {
   min-height: 100vh;
   box-sizing: border-box;
 }
+
+/* Layout scales from narrow phones to large displays. */
+html {
+  background: #000;
+  color-scheme: dark;
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+body.overzicht {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 4rem);
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+  overflow-wrap: anywhere;
+}
+.overzicht h1 {
+  margin: 0;
+}
+.trash-logo {
+  display: block;
+  width: clamp(15rem, 44vw, 32rem);
+  max-width: 100%;
+  height: auto;
+}
+.tagline {
+  max-width: 50ch;
+  font-family: sans-serif;
+  font-style: italic;
+  margin-block: 1rem 2rem;
+}
+.edities a {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  min-height: 44px;
+  padding-block: 0.75rem;
+}
+.edities a > * {
+  min-width: 0;
+}
+.edities a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+@media (max-width: 24rem) {
+  .edities .focus {
+    flex-basis: 100%;
+  }
+}
