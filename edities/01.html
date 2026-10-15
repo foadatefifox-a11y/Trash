@@ -172,7 +172,7 @@
         if (!loading) {
           status.textContent = 'Loading sounds…';
           loading = Promise.all(['plastic-inside', 'plastic-outside', 'paper-inside', 'paper-outside'].map(async key => {
-            const response = await fetch('../audio/' + key + '.m4a' + (key.startsWith('plastic-') ? '?v=recap-1' : ''));
+            const response = await fetch('../audio/' + (key.startsWith('plastic-') ? key + '-recap-v2' : key) + '.m4a', { cache: 'no-store' });
             if (!response.ok) throw new Error('Sound could not load');
             buffers.set(key, await context.decodeAudioData(await response.arrayBuffer()));
           })).catch(error => { buffers.clear(); loading = null; throw error; });
