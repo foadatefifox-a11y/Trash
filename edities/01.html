@@ -13,7 +13,39 @@
       width: 100%;
       background: #000;
     }
+    * { box-sizing: border-box; }
+    body {
+      color: #fff;
+      padding: clamp(1rem, 4vw, 4rem);
+    }
+    .materials {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(2rem, 8vh, 6rem);
+      max-width: 72rem;
+      margin-inline: auto;
+    }
+    .materials p {
+      margin: 0;
+      font-family: Impact, "Arial Narrow", sans-serif;
+      font-weight: 900;
+      font-size: clamp(2rem, 12vw, 9rem);
+      line-height: 1.1;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+    @supports (-webkit-text-stroke: 1px white) {
+      .materials p {
+        color: transparent;
+        -webkit-text-stroke: clamp(1px, 0.15vw, 2px) #fff;
+      }
+    }
   </style>
 </head>
-<body></body>
+<body>
+  <main class="materials" aria-label="Materials">
+    <p>plastic</p>
+    <p>paper</p>
+  </main>
+</body>
 </html>
