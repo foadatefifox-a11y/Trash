@@ -97,6 +97,36 @@
         filter: blur(1.5px);
       }
     }
+
+    /* Reserve two steady rows; only the selected label follows viewport size. */
+    .materials {
+      grid-template-rows: repeat(2, min(26vh, 16rem));
+      grid-template-rows: repeat(2, min(26svh, 16rem));
+      gap: min(6vh, 4rem);
+      gap: min(6svh, 4rem);
+    }
+    .material {
+      height: 100%;
+      padding: 0;
+    }
+    .material[aria-pressed="true"] {
+      font-size: min(16vw, 18vh, 14rem);
+      font-size: min(16vw, 18svh, 14rem);
+    }
+    .material[aria-pressed="false"] {
+      font-size: min(1.5rem, 6vw, 8vh);
+      font-size: min(1.5rem, 6vw, 8svh);
+    }
+    @media (hover: none) and (pointer: coarse), (max-width: 600px) {
+      .material[aria-pressed="true"] {
+        font-size: min(15vw, 17vh, 6rem);
+        font-size: min(15vw, 17svh, 6rem);
+      }
+      .material[aria-pressed="false"] {
+        font-size: min(1.25rem, 6vw, 8vh);
+        font-size: min(1.25rem, 6vw, 8svh);
+      }
+    }
   </style>
 </head>
 <body>
