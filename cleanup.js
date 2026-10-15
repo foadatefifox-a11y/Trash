@@ -5,6 +5,7 @@
   const point = (x, y) => new DOMPoint(x, y).matrixTransform(target.querySelector('svg').getScreenCTM().inverse());
 
   function reset() {
+    window.cleanupAudio?.stop();
     pointer = null;
     letters.forEach(letter => { cancelAnimationFrame(letter.frame); letter.node.remove(); });
     if (original) original.style.removeProperty('visibility');
@@ -18,6 +19,7 @@
 
   control.addEventListener('click', () => {
     if (target) { reset(); return; }
+    window.cleanupAudio?.prepare();
     target = document.querySelector('.material[aria-pressed="true"]');
     original = target.querySelector('text');
     const svg = target.querySelector('svg');
@@ -68,14 +70,18 @@
     if (!target || event.pointerId !== pointer) return;
     event.preventDefault();
     const a = point(previous.x, previous.y), b = point(event.clientX, event.clientY);
+    let moved = false;
     letters.forEach(letter => {
       if (letter.gone) return;
       const rect = letter.node.getBoundingClientRect();
       if (!letter.attached && touches(previous.x, previous.y, event.clientX, event.clientY, rect)) letter.attached = true;
       if (letter.attached) {
         letter.x += b.x-a.x; letter.y += b.y-a.y; paint(letter);
+        if (b.x !== a.x || b.y !== a.y) moved = true;
       }
     });
+    if (moved) window.cleanupAudio?.move(target.dataset.material);
+    else window.cleanupAudio?.stop();
     previous = {x: event.clientX, y: event.clientY};
   }
   document.addEventListener('pointerdown', event => {
@@ -88,6 +94,7 @@
   }, {passive:false});
   document.addEventListener('pointermove', move, {passive:false});
   function release(event) {
+    window.cleanupAudio?.stop();
     if (!target || event.pointerId !== pointer) return;
     const svg = target.querySelector('svg');
     const matrix = svg.getScreenCTM();
@@ -113,6 +120,7 @@
   }
   document.addEventListener('pointerup', release);
   document.addEventListener('pointercancel', event => {
+    window.cleanupAudio?.stop();
     if (event.pointerId === pointer) { letters.forEach(l=>l.attached=false); pointer=null; }
   });
 })();
