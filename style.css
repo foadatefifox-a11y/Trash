@@ -108,3 +108,13 @@ body.overzicht {
     flex-basis: 100%;
   }
 }
+
+/* Keep edition names aligned, including entries without a date. */
+.edities a {
+  display: grid;
+  grid-template-columns: 2ch 16ch minmax(0, 1fr);
+}
+@media (max-width: 24rem) {
+  .edities a { grid-template-columns: 2ch minmax(0, 1fr); }
+  .edities .focus { grid-column: 2; }
+}
