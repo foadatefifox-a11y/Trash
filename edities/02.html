@@ -15,8 +15,8 @@
     }
     .trashcan {
       position: absolute; left: 0; top: 50%;
-      width: min(40.76923077vh, 70vw);
-      width: min(40.76923077svh, 70vw);
+      width: min(40.76923077vh, var(--can-width-limit));
+      width: min(40.76923077svh, var(--can-width-limit));
       margin: 0;
       transform: translate3d(0, -50%, 0);
       will-change: transform;
@@ -30,14 +30,23 @@
   </main>
   <script>
     const can = document.querySelector('.trashcan');
+    // Keep the initial width limit: squeezing the window must not shrink the can.
+    can.style.setProperty('--can-width-limit', window.innerWidth * 0.7 + 'px');
     let x = Math.max(0, (window.innerWidth - can.getBoundingClientRect().width) / 2);
     let direction = -1;
     let lastTime = null;
     function animate(time) {
       const elapsed = lastTime === null ? 0 : Math.min((time - lastTime) / 1000, 0.05);
       lastTime = time;
-      const limit = Math.max(0, window.innerWidth - can.getBoundingClientRect().width);
-      const speed = Math.max(80, window.innerWidth * 0.25);
+      const canWidth = can.getBoundingClientRect().width;
+      const limit = window.innerWidth - canWidth;
+      const speed = Math.max(96, window.innerWidth * 0.3);
+      if (limit <= 0) {
+        x = limit / 2;
+        can.style.transform = 'translate3d(' + x + 'px, -50%, 0)';
+        requestAnimationFrame(animate);
+        return;
+      }
       x += direction * speed * elapsed;
       if (x <= 0) {
         x = 0;
