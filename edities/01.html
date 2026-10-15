@@ -103,10 +103,10 @@
       max-width: none;
       min-width: 0;
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: repeat(2, 36vh);
-      grid-template-rows: repeat(2, 36svh);
-      gap: min(6vh, 4rem);
-      gap: min(6svh, 4rem);
+      height: 80vh;
+      height: 80svh;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: clamp(0.25rem, 4vmin, 4rem);
     }
     .material {
       height: 100%;
@@ -176,10 +176,10 @@
         const text = button.textContent.trim().toUpperCase();
         const measuredWidth = measureContext.measureText(text).width;
         const spacing = parseFloat(style.letterSpacing) || 0;
-        const availableWidth = Math.max(1, button.clientWidth - 24 - spacing * text.length);
+        const availableWidth = Math.max(1, Math.min(window.innerWidth * 0.8, button.clientWidth - 24) - spacing * text.length);
         const fitWidth = availableWidth / (measuredWidth / 100);
         const fitHeight = button.clientHeight / 1.25;
-        const size = Math.max(1, Math.min(window.innerWidth * 0.28, fitWidth, fitHeight));
+        const size = Math.max(1, Math.min(fitWidth, fitHeight));
         button.style.fontSize = size + 'px';
       });
     }
