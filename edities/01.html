@@ -98,15 +98,19 @@
       }
     }
 
-    /* Reserve two steady rows; only the selected label follows viewport size. */
+    /* Keep row positions steady while the selected lettering grows. */
     .materials {
-      grid-template-rows: repeat(2, min(26vh, 16rem));
-      grid-template-rows: repeat(2, min(26svh, 16rem));
+      max-width: none;
+      min-width: 0;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: repeat(2, 36vh);
+      grid-template-rows: repeat(2, 36svh);
       gap: min(6vh, 4rem);
       gap: min(6svh, 4rem);
     }
     .material {
       height: 100%;
+      min-width: 0;
       padding: 0;
     }
     .material[aria-pressed="true"] {
@@ -125,6 +129,14 @@
       .material[aria-pressed="false"] {
         font-size: min(1.25rem, 6vw, 8vh);
         font-size: min(1.25rem, 6vw, 8svh);
+      }
+    }
+    .material[aria-pressed="true"] span {
+      -webkit-text-stroke-width: max(0.3px, 0.009em);
+    }
+    @media (hover: none) and (pointer: coarse), (max-width: 600px) {
+      .material[aria-pressed="true"] span {
+        -webkit-text-stroke-width: max(0.65px, 0.009em);
       }
     }
   </style>
@@ -151,6 +163,28 @@
     const landscape = window.matchMedia('(orientation: landscape)');
     const touchScreen = window.matchMedia('(hover: none) and (pointer: coarse)');
     let wasLandscape = landscape.matches;
+
+    const measureContext = document.createElement('canvas').getContext('2d');
+    function updateTypography() {
+      materials.forEach(button => {
+        if (button.getAttribute('aria-pressed') !== 'true') {
+          button.style.removeProperty('font-size');
+          return;
+        }
+        const style = getComputedStyle(button);
+        measureContext.font = style.fontWeight + ' 100px ' + style.fontFamily;
+        const text = button.textContent.trim().toUpperCase();
+        const measuredWidth = measureContext.measureText(text).width;
+        const spacing = parseFloat(style.letterSpacing) || 0;
+        const availableWidth = Math.max(1, button.clientWidth - 24 - spacing * text.length);
+        const fitWidth = availableWidth / (measuredWidth / 100);
+        const fitHeight = button.clientHeight / 1.25;
+        const size = Math.max(1, Math.min(window.innerWidth * 0.28, fitWidth, fitHeight));
+        button.style.fontSize = size + 'px';
+      });
+    }
+    updateTypography();
+    if (document.fonts) document.fonts.ready.then(updateTypography);
 
     function stopSound() {
       if (source) {
@@ -224,6 +258,7 @@
         materials.forEach(material => {
           material.setAttribute('aria-pressed', String(material === button));
         });
+        updateTypography();
         enableSound();
       });
     });
@@ -247,6 +282,7 @@
     }
 
     window.addEventListener('resize', () => {
+      updateTypography();
       if (touchScreen.matches) {
         width = window.innerWidth;
         handleOrientation();
