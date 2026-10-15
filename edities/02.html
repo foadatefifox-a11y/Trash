@@ -15,10 +15,10 @@
     }
     .trashcan {
       position: absolute; left: 1rem; top: 50%;
-      width: min(40.76923077vh, calc(100vw - 2rem));
-      width: min(40.76923077svh, calc(100vw - 2rem));
+      width: min(40.76923077vh, 70vw);
+      width: min(40.76923077svh, 70vw);
       margin: 0;
-      animation: drift 7s ease-in-out infinite alternate;
+      animation: drift 5s linear infinite alternate;
       will-change: transform;
     }
     .trashcan img { display: block; width: 100%; height: auto; }
@@ -33,7 +33,7 @@
 </head>
 <body>
   <main class="can-band" aria-label="Prullenbak">
-    <figure class="trashcan"><img src="../trashcan.svg" alt="Prullenbak" width="212" height="260"></figure>
+    <figure class="trashcan"><img src="../trashcan.svg?v=white-outlines-2" alt="Prullenbak" width="212" height="260"></figure>
   </main>
 </body>
 </html>
