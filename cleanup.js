@@ -47,7 +47,15 @@
   document.querySelectorAll('.material').forEach(button => button.addEventListener('click', () => {
     if (target && button !== target) reset();
   }, true));
-  window.addEventListener('resize', reset);
+  window.addEventListener('resize', () => {
+    if (!target) return;
+    // Letter offsets are in SVG coordinates, so they scale with the word.
+    // End only an active pointer gesture; preserve every letter and its progress.
+    window.cleanupAudio?.stop();
+    if (pointer !== null && target.hasPointerCapture(pointer)) target.releasePointerCapture(pointer);
+    pointer = null;
+    letters.forEach(letter => { letter.attached = false; });
+  });
 
   function paint(letter) {
     letter.node.setAttribute('transform', `translate(${letter.x} ${letter.y})`);
