@@ -14,26 +14,45 @@
       top: 30svh; height: 50svh;
     }
     .trashcan {
-      position: absolute; left: 1rem; top: 50%;
+      position: absolute; left: 0; top: 50%;
       width: min(40.76923077vh, 70vw);
       width: min(40.76923077svh, 70vw);
       margin: 0;
-      animation: drift 5s linear infinite alternate;
+      transform: translate3d(0, -50%, 0);
       will-change: transform;
     }
     .trashcan img { display: block; width: 100%; height: auto; }
-    @keyframes drift {
-      from { transform: translate(0, -50%); }
-      to { transform: translate(calc(100vw - 100% - 2rem), -50%); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .trashcan { animation: none; left: 50%; transform: translate(-50%, -50%); }
-    }
   </style>
 </head>
 <body>
   <main class="can-band" aria-label="Prullenbak">
     <figure class="trashcan"><img src="../trashcan.svg?v=white-outlines-2" alt="Prullenbak" width="212" height="260"></figure>
   </main>
+  <script>
+    const can = document.querySelector('.trashcan');
+    let x = Math.max(0, (window.innerWidth - can.getBoundingClientRect().width) / 2);
+    let direction = -1;
+    let lastTime = null;
+    function animate(time) {
+      const elapsed = lastTime === null ? 0 : Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
+      const limit = Math.max(0, window.innerWidth - can.getBoundingClientRect().width);
+      const speed = Math.max(80, window.innerWidth * 0.25);
+      x += direction * speed * elapsed;
+      if (x <= 0) {
+        x = 0;
+        direction = 1;
+      } else if (x >= limit) {
+        x = limit;
+        direction = -1;
+      }
+      can.style.transform = 'translate3d(' + x + 'px, -50%, 0)';
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+    window.addEventListener('resize', () => {
+      x = Math.min(x, Math.max(0, window.innerWidth - can.getBoundingClientRect().width));
+    });
+  </script>
 </body>
 </html>
