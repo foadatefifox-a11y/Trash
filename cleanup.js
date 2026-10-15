@@ -14,11 +14,12 @@
     target = original = null;
     window.cleaningWord = null;
     control.textContent = 'clean it up';
+    control.hidden = false;
     control.setAttribute('aria-pressed', 'false');
   }
 
   control.addEventListener('click', () => {
-    if (target) { reset(); return; }
+    if (target) return;
     window.cleanupAudio?.prepare();
     target = document.querySelector('.material[aria-pressed="true"]');
     original = target.querySelector('text');
@@ -39,7 +40,7 @@
     original.style.visibility = 'hidden';
     target.classList.add('cleaning');
     window.cleaningWord = target;
-    control.textContent = 'start again';
+    control.textContent = 'clean it up';
     control.setAttribute('aria-pressed', 'true');
   });
 
@@ -88,7 +89,10 @@
         if (b.x !== a.x || b.y !== a.y) moved = true;
       }
     });
-    if (moved) window.cleanupAudio?.move(target.dataset.material);
+    if (moved) {
+      control.hidden = true;
+      window.cleanupAudio?.move(target.dataset.material);
+    }
     else window.cleanupAudio?.stop();
     previous = {x: event.clientX, y: event.clientY};
   }
