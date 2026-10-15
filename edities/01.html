@@ -183,6 +183,63 @@
       });
     });
 
+
+    let sweepSources = [];
+    let sweepMaterial = null;
+    function stopSweepSound() {
+      const previous = sweepSources;
+      sweepSources = [];
+      sweepMaterial = null;
+      previous.forEach(item => {
+        if (!item.ended) item.source.stop();
+        item.source.disconnect();
+        item.gain.disconnect();
+      });
+    }
+    window.cleanupAudio = {
+      prepare: enableSound,
+      stop: stopSweepSound,
+      move(material) {
+        if (!context || context.state !== 'running' || !buffers.has(material + '-inside') || !buffers.has(material + '-outside')) return;
+        stopSound();
+        if (sweepMaterial === material && sweepSources.length === 2) {
+          sweepSources.forEach(item => item.source.stop(context.currentTime + 0.09));
+          return;
+        }
+        stopSweepSound();
+        sweepMaterial = material;
+        const batch = [];
+        sweepSources = batch;
+        ['inside', 'outside'].forEach(direction => {
+          const node = context.createBufferSource();
+          node.buffer = buffers.get(material + '-' + direction);
+          node.loop = true;
+          const gain = context.createGain();
+          // Blend both recordings with room for their combined volume.
+          gain.gain.value = direction === 'outside' ? 0.585 : 0.45;
+          node.connect(gain);
+          gain.connect(context.destination);
+          const item = {source: node, gain, ended: false};
+          batch.push(item);
+          node.onended = () => {
+            item.ended = true;
+            node.disconnect();
+            gain.disconnect();
+            if (sweepSources === batch && batch.every(entry => entry.ended)) {
+              sweepSources = [];
+              sweepMaterial = null;
+            }
+          };
+          node.start();
+          node.stop(context.currentTime + 0.09);
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopSweepSound();
+    });
+    window.addEventListener('pagehide', stopSweepSound);
+
     function handleOrientation() {
       const nextLandscape = landscape.matches;
       if (nextLandscape === wasLandscape) return;
