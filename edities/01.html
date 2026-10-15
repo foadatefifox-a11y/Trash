@@ -125,13 +125,17 @@
       source = context.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
-      source.connect(context.destination);
+      const gain = context.createGain();
+      gain.gain.value = direction === 'outside' ? 1.3 : 1;
+      source.connect(gain);
+      gain.connect(context.destination);
       source.start();
       // Audio-clock expiry still works if native window dragging blocks JS timers.
       source.stop(context.currentTime + 0.075);
       const currentSource = source;
       currentSource.onended = () => {
         currentSource.disconnect();
+        gain.disconnect();
         if (source === currentSource) {
           source = null;
           playingKey = null;
