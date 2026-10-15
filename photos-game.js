@@ -1,6 +1,11 @@
 (() => {
   const can = document.querySelector('.trashcan');
-  const metal = document.querySelector('.metal-choice');
+  const choices = document.querySelectorAll('.metal-choice');
+  const photos = {
+    metal: {name:'Metal', image:'../images/redbull-can.png', position:'54% center', width:'min(14.8svh, 120px)'},
+    cookies: {name:'Plastic and paper', image:'../images/mini-cookies-box.png', position:'71% center', width:'min(29svh, 240px)'}
+  };
+  let chosenButton = null;
   const control = document.querySelector('.throw-control');
   const piece = document.querySelector('.photo-piece');
   const guide = document.querySelector('.aim-path');
@@ -30,13 +35,20 @@
     instruction.hidden = true;
     status.textContent = '';
   }
-  metal.addEventListener('click', () => {
-    metal.setAttribute('aria-pressed','true');
+  function choose(button) {
+    chosenButton = button;
+    const photo = photos[button.dataset.photo];
+    choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
+    piece.style.setProperty('--piece-image', 'url("' + photo.image + '")');
+    piece.style.setProperty('--photo-w', photo.width);
+    piece.style.backgroundPosition = photo.position;
+    piece.setAttribute('aria-label', photo.name + ' photo. Drag back and release to throw after crumpling.');
     resetPhoto();
-  });
+  }
+  choices.forEach(button => button.addEventListener('click', () => choose(button)));
   control.addEventListener('click', () => {
     if (state === 'hidden') {
-      metal.setAttribute('aria-pressed','true'); resetPhoto();
+      choose(chosenButton || choices[0]);
     }
     if (state !== 'photo') return;
     state = 'crumpling'; control.disabled = true;
@@ -112,10 +124,12 @@
       stored.style.left=Math.max(20,Math.min(80,(position.x-box.left)/box.width*100))+'%';
       stored.style.bottom=(9+(catches-1)%5*7)+'%';
       stored.style.setProperty('--stored-spin',((catches*47)%80-40)+'deg');
-      stored.setAttribute('aria-label','Caught metal photo');
+      stored.style.setProperty('--piece-image', piece.style.getPropertyValue('--piece-image'));
+      stored.style.backgroundPosition = piece.style.backgroundPosition;
+      stored.setAttribute('aria-label','Caught ' + photos[chosenButton.dataset.photo].name + ' photo');
       can.append(stored);
       status.textContent='In the bin!';
-    }else status.textContent='Missed. Choose metal to try again.';
+    }else status.textContent='Missed. Choose a material to try again.';
     control.disabled=false;
     // Restore a fresh photo only when the user chooses metal again.
     state='hidden';

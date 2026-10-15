@@ -29,7 +29,7 @@
     .throw-control:disabled { opacity: 0.45; cursor: default; }
     button:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
     .photo-piece, .stored-piece {
-      background-image: url('../images/redbull-can.png');
+      background-image: var(--piece-image, url('../images/redbull-can.png'));
       background-size: auto 100%; background-position: 54% center; background-repeat: no-repeat;
       background-color: #eee;
     }
@@ -82,6 +82,14 @@
       .stored-piece { animation: none; }
       .metal-choice span { transition: none; }
     }
+    .material-choices {
+      position: fixed; left: 1rem; bottom: 0.35rem; z-index: 10;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem;
+    }
+    .material-choices .metal-choice { position: static; padding: 0.25rem 0.5rem; text-align: left; }
+    @media (max-width: 600px) {
+      .material-choices .metal-choice { font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -90,10 +98,13 @@
   </main>
   <svg class="aim-guide" aria-hidden="true"><path class="aim-path"></path></svg>
   <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
-  <button class="metal-choice" type="button" aria-pressed="false"><span>METAL</span></button>
+  <nav class="material-choices" aria-label="Choose a photo">
+    <button class="metal-choice" data-photo="metal" type="button" aria-pressed="false"><span>METAL</span></button>
+    <button class="metal-choice" data-photo="cookies" type="button" aria-pressed="false"><span>PLASTIC AND PAPER</span></button>
+  </nav>
   <button class="throw-control" type="button">throw it out</button>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=throw-1"></script>
+  <script src="../photos-game.js?v=cookies-2"></script>
 </body>
 </html>
