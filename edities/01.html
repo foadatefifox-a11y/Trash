@@ -101,7 +101,6 @@
     let resizing = false;
     let stopTimer;
     let width = window.innerWidth;
-    let height = window.innerHeight;
     let loading;
 
     function stopSound() {
@@ -116,7 +115,10 @@
     function playSound() {
       if (!context || context.state !== 'running' || !resizing || !direction) return;
       const key = selected + '-' + direction;
-      if (key === playingKey) return;
+      if (key === playingKey && source) {
+        source.stop(context.currentTime + 0.075);
+        return;
+      }
       stopSound();
       const buffer = buffers.get(key);
       if (!buffer) return;
@@ -125,6 +127,16 @@
       source.loop = true;
       source.connect(context.destination);
       source.start();
+      // Audio-clock expiry still works if native window dragging blocks JS timers.
+      source.stop(context.currentTime + 0.075);
+      const currentSource = source;
+      currentSource.onended = () => {
+        currentSource.disconnect();
+        if (source === currentSource) {
+          source = null;
+          playingKey = null;
+        }
+      };
       playingKey = key;
     }
 
@@ -144,7 +156,6 @@
         }
         await loading;
         status.textContent = '';
-        playSound();
       } catch (error) {
         stopSound();
         status.textContent = 'Sound could not load. Tap a word to try again.';
@@ -154,6 +165,8 @@
     materials.forEach(button => {
       button.addEventListener('click', () => {
         selected = button.dataset.material;
+        resizing = false;
+        clearTimeout(stopTimer);
         stopSound();
         materials.forEach(material => {
           material.setAttribute('aria-pressed', String(material === button));
@@ -164,20 +177,17 @@
 
     window.addEventListener('resize', () => {
       const nextWidth = window.innerWidth;
-      const nextHeight = window.innerHeight;
       const dx = nextWidth - width;
-      const dy = nextHeight - height;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < 2) return;
-      direction = (Math.abs(dx) >= 2 ? dx : dy) < 0 ? 'inside' : 'outside';
+      if (dx === 0) return;
+      direction = dx < 0 ? 'inside' : 'outside';
       width = nextWidth;
-      height = nextHeight;
       resizing = true;
       playSound();
       clearTimeout(stopTimer);
       stopTimer = setTimeout(() => {
         resizing = false;
         stopSound();
-      }, 200);
+      }, 75);
     });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
