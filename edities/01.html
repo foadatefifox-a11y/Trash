@@ -58,6 +58,7 @@
   <main class="materials" aria-label="Choose a material">
     <button class="material" data-material="plastic" type="button" aria-label="Plastic" aria-pressed="true"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>PLASTIC</text></svg></span></button>
     <button class="material" data-material="paper" type="button" aria-label="Paper" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>PAPER</text></svg></span></button>
+    <button class="material" data-material="metal" type="button" aria-label="Metal" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>METAL</text></svg></span></button>
   </main>
   <button class="cleanup-control" type="button" aria-pressed="false">clean it up</button>
   <p class="sound-status" role="status"></p>
@@ -81,7 +82,11 @@
 
     const glyphContext = document.createElement('canvas').getContext('2d');
     function updateTypography() {
+      const inactive = [...materials].filter(button => button.getAttribute('aria-pressed') === 'false');
       materials.forEach(button => {
+        const slot = inactive.indexOf(button);
+        button.style.left = slot < 0 ? '0' : (slot * 100 / inactive.length) + '%';
+        button.style.width = slot < 0 ? '100%' : (100 / inactive.length) + '%';
         const svg = button.querySelector('svg');
         const text = button.querySelector('text');
         glyphContext.font = '900 100px Arial, Helvetica, sans-serif';
@@ -155,7 +160,7 @@
         await context.resume();
         if (!loading) {
           status.textContent = 'Loading sounds…';
-          loading = Promise.all(['plastic-inside', 'plastic-outside', 'paper-inside', 'paper-outside'].map(async key => {
+          loading = Promise.all(['plastic-inside', 'plastic-outside', 'paper-inside', 'paper-outside', 'metal-inside', 'metal-outside'].map(async key => {
             const response = await fetch('../audio/' + (key.startsWith('plastic-') ? key + '-recap-v2' : key) + '.m4a', { cache: 'no-store' });
             if (!response.ok) throw new Error('Sound could not load');
             const buffer = await context.decodeAudioData(await response.arrayBuffer());

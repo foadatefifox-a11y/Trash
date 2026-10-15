@@ -118,3 +118,7 @@ body.overzicht {
   .edities a { grid-template-columns: 2ch minmax(0, 1fr); }
   .edities .focus { grid-column: 2; }
 }
+
+/* Edition links share two columns now that dates are removed. */
+.edities a { grid-template-columns: 2ch minmax(0, 1fr); }
+.edities .focus { grid-column: 2; }
