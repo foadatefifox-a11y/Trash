@@ -29,6 +29,7 @@
       gap: min(10svh, 5rem);
     }
     .material {
+      position: relative;
       display: grid;
       place-items: center;
       width: 100%;
@@ -50,8 +51,14 @@
       -webkit-tap-highlight-color: transparent;
     }
     .material span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max-content;
+      transform: translate(-50%, -50%) scaleY(var(--text-height-scale, 1));
+      transform-origin: center;
       display: block;
-      transition: filter 220ms ease, -webkit-text-stroke-width 160ms linear;
+      transition: filter 220ms ease, -webkit-text-stroke-width 1400ms linear;
       pointer-events: none;
     }
     .material[aria-pressed="false"] span {
@@ -170,21 +177,26 @@
         if (button.getAttribute('aria-pressed') !== 'true') {
           button.style.removeProperty('font-size');
           button.querySelector('span').style.removeProperty('-webkit-text-stroke-width');
+          button.querySelector('span').style.removeProperty('--text-height-scale');
           return;
         }
         const style = getComputedStyle(button);
         measureContext.font = style.fontWeight + ' 100px ' + style.fontFamily;
         const text = button.textContent.trim().toUpperCase();
         const measuredWidth = measureContext.measureText(text).width;
-        const spacing = parseFloat(style.letterSpacing) || 0;
-        const availableWidth = Math.max(1, Math.min(window.innerWidth * 0.8, button.clientWidth - 24) - spacing * text.length);
-        const fitWidth = availableWidth / (measuredWidth / 100);
-        const fitHeight = button.clientHeight / 1.25;
-        const size = Math.max(1, Math.min(fitWidth, fitHeight));
+        const letterSpacingRatio = (parseFloat(style.letterSpacing) || 0) / parseFloat(style.fontSize);
+        const targetWidth = window.innerWidth * 0.8;
+        const size = targetWidth / (measuredWidth / 100 + letterSpacingRatio * text.length);
         button.style.fontSize = size + 'px';
+        const label = button.querySelector('span');
+        const actualWidth = label.getBoundingClientRect().width;
+        const correctedSize = actualWidth ? size * targetWidth / actualWidth : size;
+        button.style.fontSize = correctedSize + 'px';
+        // Keep the requested width even on short landscape screens.
+        label.style.setProperty('--text-height-scale', Math.min(1, button.clientHeight / (correctedSize * 1.25)));
         const minimumStroke = touchScreen.matches || window.innerWidth <= 600 ? 0.65 : 0.3;
-        const stroke = minimumStroke + Math.max(0, size - 40) / 100 * (4 / 3);
-        button.querySelector('span').style.webkitTextStrokeWidth = stroke + 'px';
+        const stroke = minimumStroke + Math.max(0, correctedSize - 40) / 300 * (4 / 3);
+        label.style.webkitTextStrokeWidth = stroke + 'px';
       });
     }
     updateTypography();
