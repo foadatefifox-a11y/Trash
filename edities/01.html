@@ -70,22 +70,123 @@
     @media (prefers-reduced-motion: reduce) {
       .material span { transition: none; }
     }
+    .sound-status {
+      position: fixed;
+      bottom: max(1rem, env(safe-area-inset-bottom));
+      left: 1rem;
+      right: 1rem;
+      margin: 0;
+      text-align: center;
+      color: #aaa;
+      font: 0.75rem/1.4 system-ui, sans-serif;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <main class="materials" aria-label="Choose a material">
-    <button class="material" type="button" aria-pressed="true"><span>plastic</span></button>
-    <button class="material" type="button" aria-pressed="false"><span>paper</span></button>
+    <button class="material" data-material="plastic" type="button" aria-pressed="true"><span>plastic</span></button>
+    <button class="material" data-material="paper" type="button" aria-pressed="false"><span>paper</span></button>
   </main>
+  <p class="sound-status" role="status">Tap a word to enable sound, then resize the window.</p>
   <script>
     const materials = document.querySelectorAll('.material');
+    const status = document.querySelector('.sound-status');
+    const buffers = new Map();
+    let context;
+    let selected = 'plastic';
+    let source = null;
+    let playingKey = null;
+    let direction = null;
+    let resizing = false;
+    let stopTimer;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let loading;
+
+    function stopSound() {
+      if (source) {
+        source.stop();
+        source.disconnect();
+        source = null;
+      }
+      playingKey = null;
+    }
+
+    function playSound() {
+      if (!context || context.state !== 'running' || !resizing || !direction) return;
+      const key = selected + '-' + direction;
+      if (key === playingKey) return;
+      stopSound();
+      const buffer = buffers.get(key);
+      if (!buffer) return;
+      source = context.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(context.destination);
+      source.start();
+      playingKey = key;
+    }
+
+    async function enableSound() {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) throw new Error('Audio unavailable');
+        if (!context) context = new AudioContextClass();
+        await context.resume();
+        if (!loading) {
+          status.textContent = 'Loading sounds…';
+          loading = Promise.all(['plastic-inside', 'plastic-outside', 'paper-inside', 'paper-outside'].map(async key => {
+            const response = await fetch('../audio/' + key + '.m4a');
+            if (!response.ok) throw new Error('Sound could not load');
+            buffers.set(key, await context.decodeAudioData(await response.arrayBuffer()));
+          })).catch(error => { buffers.clear(); loading = null; throw error; });
+        }
+        await loading;
+        status.textContent = '';
+        playSound();
+      } catch (error) {
+        stopSound();
+        status.textContent = 'Sound could not load. Tap a word to try again.';
+      }
+    }
+
     materials.forEach(button => {
       button.addEventListener('click', () => {
+        selected = button.dataset.material;
+        stopSound();
         materials.forEach(material => {
           material.setAttribute('aria-pressed', String(material === button));
         });
+        enableSound();
       });
     });
+
+    window.addEventListener('resize', () => {
+      const nextWidth = window.innerWidth;
+      const nextHeight = window.innerHeight;
+      const dx = nextWidth - width;
+      const dy = nextHeight - height;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 2) return;
+      direction = (Math.abs(dx) >= 2 ? dx : dy) < 0 ? 'inside' : 'outside';
+      width = nextWidth;
+      height = nextHeight;
+      resizing = true;
+      playSound();
+      clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => {
+        resizing = false;
+        stopSound();
+      }, 200);
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        resizing = false;
+        clearTimeout(stopTimer);
+        stopSound();
+      }
+    });
+    window.addEventListener('pagehide', stopSound);
   </script>
 </body>
 </html>
