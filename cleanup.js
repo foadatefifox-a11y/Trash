@@ -1,5 +1,4 @@
 (() => {
-  const control = document.querySelector('.cleanup-control');
   const ns = 'http://www.w3.org/2000/svg';
   let target, original, letters = [], pointer = null, previous;
   const point = (x, y) => new DOMPoint(x, y).matrixTransform(target.querySelector('svg').getScreenCTM().inverse());
@@ -13,12 +12,9 @@
     letters = [];
     target = original = null;
     window.cleaningWord = null;
-    control.textContent = 'clean it up';
-    control.hidden = false;
-    control.setAttribute('aria-pressed', 'false');
   }
 
-  control.addEventListener('click', () => {
+  function prepareCleanup() {
     if (target) return;
     window.cleanupAudio?.prepare();
     target = document.querySelector('.material[aria-pressed="true"]');
@@ -40,9 +36,7 @@
     original.style.visibility = 'hidden';
     target.classList.add('cleaning');
     window.cleaningWord = target;
-    control.textContent = 'clean it up';
-    control.setAttribute('aria-pressed', 'true');
-  });
+  }
 
   // Selecting the other material restores this word and leaves the new one intact.
   document.querySelectorAll('.material').forEach(button => button.addEventListener('click', () => {
@@ -90,14 +84,14 @@
       }
     });
     if (moved) {
-      control.hidden = true;
       window.cleanupAudio?.move(target.dataset.material);
     }
     else window.cleanupAudio?.stop();
     previous = {x: event.clientX, y: event.clientY};
   }
   document.addEventListener('pointerdown', event => {
-    if (!target || event.button !== 0 || event.target.closest('.cleanup-control') || event.target.closest('.material[aria-pressed="false"]')) return;
+    if (event.button !== 0 || event.target.closest('.material[aria-pressed="false"]')) return;
+    prepareCleanup();
     pointer = event.pointerId;
     previous = {x:event.clientX,y:event.clientY};
     event.preventDefault();

@@ -40,17 +40,11 @@
     }
     @media (prefers-reduced-motion: reduce) { .material span { transition: none; } }
     html, body { overflow: hidden; }
-    .cleanup-control {
-      position: fixed; right: 1rem; bottom: 0.35rem; z-index: 10;
-      padding: 0.4rem 0.6rem; border: 0; background: transparent; color: #fff;
-      font: italic 1rem/1.4 sans-serif; cursor: pointer; touch-action: manipulation;
-    }
-    .cleanup-control:focus-visible { outline: 1px solid #fff; }
     .sound-status {
       width: 1px; height: 1px; overflow: hidden;
       clip-path: inset(50%); white-space: nowrap;
     }
-    .material.cleaning { cursor: grab; touch-action: none; user-select: none; }
+    .material[aria-pressed="true"] { cursor: grab; touch-action: none; user-select: none; }
     .material.cleaning:active { cursor: grabbing; }
   </style>
 </head>
@@ -60,7 +54,6 @@
     <button class="material" data-material="paper" type="button" aria-label="Paper" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>PAPER</text></svg></span></button>
     <button class="material" data-material="metal" type="button" aria-label="Metal" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>METAL</text></svg></span></button>
   </main>
-  <button class="cleanup-control" type="button" aria-pressed="false">clean it up</button>
   <p class="sound-status" role="status"></p>
   <script>
     const materials = document.querySelectorAll('.material');
@@ -316,6 +309,6 @@
     });
     window.addEventListener('pagehide', stopSound);
   </script>
-  <script src="../cleanup.js?v=hide-after-sweep-4"></script>
+  <script src="../cleanup.js?v=direct-sweep-1"></script>
 </body>
 </html>
