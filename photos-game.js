@@ -40,8 +40,8 @@
     piece.style.setProperty('--piece-image', 'url("' + photo.image + '")');
     // Give every silhouette the same area while preserving its proportions.
     const area = Math.min(22000, (innerWidth*.42)**2, (innerHeight*.32)**2);
-    piece.style.setProperty('--photo-w', Math.sqrt(area*photo.ratio)+'px');
-    piece.style.setProperty('--photo-h', Math.sqrt(area/photo.ratio)+'px');
+    piece.style.setProperty('--photo-w', Math.sqrt(area*photo.ratio)*1.15+'px');
+    piece.style.setProperty('--photo-h', Math.sqrt(area/photo.ratio)*1.15+'px');
     piece.style.backgroundPosition = 'center';
     piece.setAttribute('aria-label', photo.name + ' photo. Drag back and release to throw after crumpling.');
     resetPhoto();
