@@ -1,8 +1,7 @@
 (() => {
   const choices = document.querySelectorAll('.metal-choice');
   const photos = {
-    metal: {name:'Metal', image:'../images/redbull-can.png', position:'54% center', width:'min(14.8svh, 120px)'},
-    cookies: {name:'Plastic and paper', image:'../images/mini-cookies-box.png', position:'71% center', width:'min(29svh, 240px)'}
+    metal: {name:'Metal', image:'../images/redbull-can.png', position:'center', width:'min(14.8svh, 120px)'},
   };
   let chosenButton = null;
   const control = document.querySelector('.throw-control');

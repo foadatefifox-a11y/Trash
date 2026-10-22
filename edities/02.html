@@ -28,7 +28,7 @@
     .photo-piece {
       background-image: var(--piece-image, url('../images/redbull-can.png'));
       background-size: auto 100%; background-position: 54% center; background-repeat: no-repeat;
-      background-color: #eee;
+      background-color: transparent;
     }
     .photo-piece {
       position: fixed; top: 5svh; left: 50%; z-index: 5;
@@ -42,6 +42,7 @@
       clip-path: polygon(21% 3%,48% 0,68% 8%,87% 14%,100% 41%,91% 64%,95% 81%,70% 96%,45% 100%,26% 88%,6% 82%,0 54%,9% 31%);
       border-radius: 35%;
       background-size: auto 180%;
+      background-color: #eee;
       filter: contrast(1.15);
     }
     .photo-piece.crumpled:active { cursor: grabbing; }
@@ -86,11 +87,10 @@
   <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
   <nav class="material-choices" aria-label="Choose a photo">
     <button class="metal-choice" data-photo="metal" type="button" aria-pressed="false"><span>METAL</span></button>
-    <button class="metal-choice" data-photo="cookies" type="button" aria-pressed="false"><span>PLASTIC AND PAPER</span></button>
   </nav>
   <button class="throw-control" type="button">throw it out</button>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=no-bin-1"></script>
+  <script src="../photos-game.js?v=cutout-1"></script>
 </body>
 </html>
