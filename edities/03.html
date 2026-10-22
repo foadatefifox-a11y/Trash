@@ -6,8 +6,89 @@
   <meta name="color-scheme" content="dark">
   <title>trashy screens | trashiseeintrashydays</title>
   <style>
-    html, body { margin: 0; width: 100%; min-height: 100%; background: #000; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; background: #000; color: #fff; overflow: hidden; }
+    .screens { display: flex; width: 100%; height: 100svh; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x; cursor: grab; }
+    .screens::-webkit-scrollbar { display: none; }
+    .screens.dragging { cursor: grabbing; scroll-snap-type: none; }
+    .screen { flex: 0 0 100%; min-width: 0; height: 100%; padding: 10mm; scroll-snap-align: start; scroll-snap-stop: always; }
+    .pattern { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), minmax(0, 1fr)); width: 100%; height: 100%; gap: clamp(12px, 2vw, 28px); }
+    .object { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; pointer-events: none; user-select: none; }
+    .single { display: none; }
+    .screens:focus-visible { outline: 1px solid #fff; outline-offset: -4px; }
+    @media (max-width: 600px) and (pointer: coarse) {
+      .pattern { display: none; }
+      .single { display: block; width: 100%; height: 100%; }
+    }
+    @media (max-width: 600px) and (max-height: 950px) {
+      .pattern { display: none; }
+      .single { display: block; width: 100%; height: 100%; }
+    }
   </style>
 </head>
-<body></body>
+<body>
+  <main class="screens" tabindex="0" aria-label="Trashy screens. Swipe horizontally or use Left and Right Arrow to change material."></main>
+  <script>
+    const materials = [
+      {name:'Plastic', file:'plastic.png', width:466, height:888, box:[0,0,466,888]},
+      {name:'Paper box', file:'paper-box.png', width:960, height:536, box:[0,0,960,536], rotate:true},
+      {name:'Metal', file:'redbull-can.png', width:1086, height:1448, box:[300,0,525,1435]},
+      {name:'Organic', file:'leaf.png', width:416, height:851, box:[35,0,324,851]}
+    ];
+    const screens = document.querySelector('.screens');
+    const ns = 'http://www.w3.org/2000/svg';
+    function object(material, rotate=false) {
+      const svg=document.createElementNS(ns,'svg');
+      const [x,y,w,h]=material.box;
+      svg.classList.add('object');
+      svg.setAttribute('viewBox',rotate?`0 0 ${h} ${w}`:`${x} ${y} ${w} ${h}`);
+      svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+      svg.setAttribute('aria-hidden','true');
+      const image=document.createElementNS(ns,'image');
+      image.setAttribute('href','../images/'+material.file);
+      image.setAttribute('width',material.width);
+      image.setAttribute('height',material.height);
+      if(rotate) image.setAttribute('transform',`translate(${h} 0) rotate(90) translate(${-x} ${-y})`);
+      svg.append(image);
+      return svg;
+    }
+    materials.forEach(material=>{
+      const section=document.createElement('section');
+      section.className='screen'; section.setAttribute('aria-label',material.name);
+      const single=object(material,material.rotate); single.classList.add('single');
+      const pattern=document.createElement('div'); pattern.className='pattern';
+      section.append(single,pattern); screens.append(section);
+    });
+    function layout() {
+      const index=Math.round(screens.scrollLeft/screens.clientWidth);
+      screens.querySelectorAll('.pattern').forEach((pattern,i)=>{
+        const columns=Math.max(3,Math.min(8,Math.floor(pattern.clientWidth/145)||3));
+        const rows=Math.max(2,Math.min(5,Math.floor(pattern.clientHeight/190)||2));
+        pattern.style.setProperty('--columns',columns);
+        pattern.style.setProperty('--rows',rows);
+        pattern.replaceChildren(...Array.from({length:columns*rows},()=>object(materials[i])));
+      });
+      screens.scrollLeft=index*screens.clientWidth;
+    }
+    layout(); window.addEventListener('resize',layout);
+    screens.addEventListener('keydown',event=>{
+      if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
+      event.preventDefault();
+      const index=Math.round(screens.scrollLeft/screens.clientWidth)+(event.key==='ArrowRight'?1:-1);
+      screens.scrollTo({left:Math.max(0,Math.min(3,index))*screens.clientWidth,behavior:'smooth'});
+    });
+    let drag=null;
+    screens.addEventListener('pointerdown',event=>{
+      if(event.pointerType!=='mouse'||event.button!==0)return;
+      drag={x:event.clientX,left:screens.scrollLeft}; screens.setPointerCapture(event.pointerId); screens.classList.add('dragging');
+    });
+    screens.addEventListener('pointermove',event=>{if(drag)screens.scrollLeft=drag.left+drag.x-event.clientX;});
+    function release(){
+      if(!drag)return;
+      drag=null; screens.classList.remove('dragging');
+      screens.scrollTo({left:Math.round(screens.scrollLeft/screens.clientWidth)*screens.clientWidth,behavior:'smooth'});
+    }
+    screens.addEventListener('pointerup',release); screens.addEventListener('pointercancel',release);
+  </script>
+</body>
 </html>
