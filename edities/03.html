@@ -16,7 +16,7 @@
     .object { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; pointer-events: none; user-select: none; }
     .single { display: none; }
     @media (min-width: 601px) and (hover: hover) and (pointer: fine) {
-      .pattern .object { filter: contrast(var(--contrast, 1)) brightness(var(--brightness, 1)); }
+      .pattern .object { filter: var(--tone-filter, brightness(1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
     }
     .screens:focus-visible { outline: 1px solid #fff; outline-offset: -4px; }
     @media (max-width: 600px) and (pointer: coarse) {
@@ -75,12 +75,30 @@
         pattern.replaceChildren(...Array.from({length:count},(_,step)=>{
           const photo=object(materials[i]);
           const brightness=step<=middle
-            ? 1.7-0.7*step/middle
-            : 1-0.65*(step-middle)/(count-1-middle);
+            ? 2.3-1.3*step/middle
+            : 1-0.75*(step-middle)/(count-1-middle);
           photo.style.setProperty('--brightness',brightness);
-          // Soft threshold: push tones apart gradually without a binary cutoff.
+          // Collapse the tonal range progressively toward both extremes.
           const strength=step<=middle ? (middle-step)/middle : (step-middle)/(count-1-middle);
-          photo.style.setProperty('--contrast',1+0.65*strength);
+          photo.style.setProperty('--contrast',1+1.8*strength);
+          photo.style.setProperty('--saturation',1-0.6*strength);
+          if(strength>0){
+            const defs=document.createElementNS(ns,'defs');
+            const filter=document.createElementNS(ns,'filter');
+            const id=`tones-${i}-${step}`;
+            filter.id=id; filter.setAttribute('color-interpolation-filters','sRGB');
+            const transfer=document.createElementNS(ns,'feComponentTransfer');
+            const values=Array.from({length:33},(_,n)=>{
+              const original=n/32;
+              return original*(1-strength)+Math.round(original*4)/4*strength;
+            }).join(' ');
+            ['R','G','B'].forEach(channel=>{
+              const fn=document.createElementNS(ns,'feFunc'+channel);
+              fn.setAttribute('type','table'); fn.setAttribute('tableValues',values); transfer.append(fn);
+            });
+            filter.append(transfer); defs.append(filter); photo.prepend(defs);
+            photo.style.setProperty('--tone-filter',`url(#${id})`);
+          }
           return photo;
         }));
       });
