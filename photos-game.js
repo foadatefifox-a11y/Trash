@@ -13,10 +13,11 @@
   const status = document.querySelector('.game-status');
   const instruction = document.querySelector('.aim-hint');
   let last = null;
+  const flights = [];
+  let photoSize;
   let state = 'hidden', timer = null, pointer = null;
-  let start, pull = {x:0,y:0}, anchor, position, velocity, rotation = 0;
+  let start, pull = {x:0,y:0}, anchor, position, rotation = 0;
   const radius = () => piece.getBoundingClientRect().width/2;
-  const gravity = () => innerHeight * 1.5;
   const paint = () => {
     piece.style.left = position.x + 'px';
     piece.style.top = position.y + 'px';
@@ -52,6 +53,7 @@
     }
     if (state !== 'photo') return;
     state = 'crumpling'; control.disabled = true;
+    photoSize = {width:piece.offsetWidth, height:piece.offsetHeight};
     piece.classList.add('crumpling');
     timer = setTimeout(() => {
       state = 'ready';
@@ -63,15 +65,13 @@
       piece.focus({preventScroll:true});
     }, 600);
   });
+  function landingPoint() {
+    return {x:Math.max(0,Math.min(innerWidth,anchor.x-pull.x*5)),
+      y:Math.max(0,Math.min(innerHeight,anchor.y-pull.y*5))};
+  }
   function drawAim() {
-    const vx = -pull.x*14, vy = -pull.y*14;
-    let d = 'M '+position.x+' '+position.y;
-    for(let t=.05;t<=1.5;t+=.05){
-      const x=position.x+vx*t,y=position.y+vy*t+.5*gravity()*t*t;
-      d += ' L '+x+' '+y;
-      if(y>innerHeight)break;
-    }
-    guide.setAttribute('d',d);
+    const end = landingPoint();
+    guide.setAttribute('d', `M ${position.x} ${position.y} Q ${(position.x+end.x)/2} ${Math.min(position.y,end.y)-120} ${end.x} ${end.y}`);
   }
   piece.addEventListener('pointerdown', event => {
     if(state!=='ready'||event.button!==0)return;
@@ -92,9 +92,16 @@
   function launch() {
     if(state!=='ready')return;
     if(Math.hypot(pull.x,pull.y)<4){position={...anchor};paint();clearAim();return;}
-    velocity={x:-pull.x*14,y:-pull.y*14};
-    state='flying'; pointer=null; clearAim(); instruction.hidden=true;
-    status.textContent='';
+    const thrown = document.createElement('div');
+    thrown.className = 'photo-piece crumpled thrown-photo';
+    thrown.style.cssText = piece.style.cssText;
+    thrown.setAttribute('role','img');
+    thrown.setAttribute('aria-label',photos[chosenButton.dataset.photo].name + ' photo');
+    document.querySelector('.photo-pile').append(thrown);
+    flights.push({node:thrown, from:{...position}, end:landingPoint(), elapsed:0, size:{...photoSize}});
+    piece.hidden=true; pointer=null; clearAim(); instruction.hidden=true;
+    control.disabled=false; state='hidden';
+    status.textContent='Thrown! Choose a material or throw another.';
   }
   piece.addEventListener('pointerup', event => {
     if(event.pointerId!==pointer)return;
@@ -115,19 +122,21 @@
       position={x:anchor.x+pull.x,y:anchor.y+pull.y};paint();drawAim();
     } else if(event.key==='Enter'||event.key===' '){event.preventDefault();launch();}
   });
-  function finish() {
-    piece.hidden=true; clearAim();
-    status.textContent='Thrown! Choose a material to throw again.';
-    control.disabled=false;
-    state='hidden';
-  }
   function update(dt){
-    if(state==='flying'){
-      const r=radius();
-      velocity.y+=gravity()*dt;
-      position.x+=velocity.x*dt;position.y+=velocity.y*dt;
-      rotation+=velocity.x*dt*.2;paint();
-      if(position.y-r>innerHeight+100||position.x<-innerWidth||position.x>innerWidth*2)finish();
+    for(let i=flights.length-1;i>=0;i--){
+      const flight=flights[i];
+      flight.elapsed+=dt;
+      const t=Math.min(1,flight.elapsed/.65);
+      const {node,from,end,size}=flight;
+      node.style.left=(from.x+(end.x-from.x)*t)+'px';
+      node.style.top=(from.y+(end.y-from.y)*t-120*4*t*(1-t))+'px';
+      node.style.setProperty('--spin',(t*360)+'deg');
+      if(t===1){
+        node.style.setProperty('--land-width',size.width*3+'px');
+        node.style.setProperty('--land-height',size.height*3+'px');
+        node.className='landed-photo';
+        flights.splice(i,1);
+      }
     }
   }
   function frame(time){

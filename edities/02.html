@@ -42,23 +42,26 @@
       clip-path: polygon(21% 3%,48% 0,68% 8%,87% 14%,100% 41%,91% 64%,95% 81%,70% 96%,45% 100%,26% 88%,6% 82%,0 54%,9% 31%);
       border-radius: 35%;
       background-size: auto 180%;
-      background-color: #eee;
-      filter: contrast(1.15);
     }
     .photo-piece.crumpled:active { cursor: grabbing; }
-    .photo-piece::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-      background: conic-gradient(from 35deg at 35% 40%, #fff8, #0008 14%, transparent 22%, #fff9 35%, #0009 50%, transparent 66%, #fff9 78%, #0009 88%, #fff8),
-        repeating-linear-gradient(65deg, transparent 0 14%, #0006 15%, #fff6 17%, transparent 20% 32%);
-      mix-blend-mode: multiply;
-    }
-    .photo-piece.crumpled::after, .photo-piece.crumpling::after { opacity: 1; }
     .photo-piece.crumpling { animation: crumple 600ms ease-in-out forwards; }
     @keyframes crumple {
       0% { width: var(--photo-w); height: var(--photo-h); top: 5svh; transform: translateX(-50%) rotate(0); }
       35% { transform: translate(-50%,-20%) rotate(-18deg) scaleX(0.7); border-radius: 15%; }
       70% { transform: translate(-50%,-40%) rotate(32deg) scaleX(1.1); border-radius: 35%; }
       100% { width: var(--ball); height: var(--ball); top: 83svh; transform: translate(-50%,-50%) rotate(55deg); border-radius: 40%; }
+    }
+    .photo-pile { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .thrown-photo { pointer-events: none; }
+    .landed-photo {
+      position: absolute; width: var(--land-width); height: var(--land-height);
+      background: var(--piece-image) center / contain no-repeat;
+      transform: translate(-50%, -50%); pointer-events: none;
+      animation: unfold 450ms ease-out;
+    }
+    @keyframes unfold {
+      from { scale: 0.15; rotate: 20deg; }
+      to { scale: 1; rotate: 0deg; }
     }
     .aim-guide { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
     .aim-path { fill: none; stroke: #fff9; stroke-width: 1.5px; stroke-dasharray: 3 8; }
@@ -71,6 +74,7 @@
     @media (prefers-reduced-motion: reduce) {
       .photo-piece.crumpling { animation-duration: 1ms; }
       .metal-choice span { transition: none; }
+      .landed-photo { animation: none; }
     }
     .material-choices {
       position: fixed; left: 1rem; bottom: 0.35rem; z-index: 10;
@@ -83,6 +87,7 @@
   </style>
 </head>
 <body>
+  <div class="photo-pile" aria-label="Thrown photos"></div>
   <svg class="aim-guide" aria-hidden="true"><path class="aim-path"></path></svg>
   <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
   <nav class="material-choices" aria-label="Choose a photo">
@@ -95,6 +100,6 @@
   <button class="throw-control" type="button">throw it out</button>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=materials-3"></script>
+  <script src="../photos-game.js?v=photo-pile-1"></script>
 </body>
 </html>
