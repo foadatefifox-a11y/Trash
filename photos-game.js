@@ -163,9 +163,27 @@
       node.style.top=(from.y+(end.y-from.y)*t)+'px';
       node.style.setProperty('--spin',(t*360)+'deg');
       if(t===1){
+        const folded = getComputedStyle(node);
+        const fromShape = {
+          width:folded.width, height:folded.height,
+          clipPath:folded.clipPath, borderRadius:folded.borderRadius,
+          backgroundSize:folded.backgroundSize,
+          transform:'translate(-50%, -50%) rotate(360deg)'
+        };
         node.style.setProperty('--land-width',size.width*1.4+'px');
         node.style.setProperty('--land-height',size.height*1.4+'px');
         node.className='landed-photo';
+        const opened = getComputedStyle(node);
+        // Unfold the same object around its landing center, without moving it.
+        node.animate([fromShape, {
+          width:opened.width, height:opened.height,
+          clipPath:'polygon(0% 0%, 25% 0%, 50% 0%, 75% 0%, 100% 0%, 100% 50%, 100% 100%, 75% 100%, 50% 100%, 25% 100%, 0% 100%, 0% 75%, 0% 50%)',
+          borderRadius:'0px', backgroundSize:'auto 100%',
+          transform:'translate(-50%, -50%) rotate(360deg)'
+        }], {
+          duration:matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 550,
+          easing:'cubic-bezier(0.22, 0.61, 0.36, 1)'
+        });
         flights.splice(i,1);
       }
     }
