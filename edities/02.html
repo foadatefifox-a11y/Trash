@@ -66,13 +66,10 @@
       .landed-photo { animation: none; }
     }
     .material-choices {
-      position: fixed; left: 1rem; bottom: 0.35rem; z-index: 10;
-      display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem;
+      position: fixed; left: 0; right: 0; bottom: 0; height: 10svh; z-index: 10;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center;
     }
-    .material-choices .metal-choice { position: static; padding: 0.25rem 0.5rem; text-align: left; }
-    @media (max-width: 600px) {
-      .material-choices .metal-choice { font-size: 12px; }
-    }
+    .material-choices .metal-choice { position: static; min-width: 0; height: 100%; padding: 0.25rem; text-align: center; font-size: clamp(12px, 2.8vw, 24px); }
   </style>
 </head>
 <body>

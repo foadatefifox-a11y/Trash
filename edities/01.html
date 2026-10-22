@@ -53,6 +53,7 @@
     <button class="material" data-material="plastic" type="button" aria-label="Plastic" aria-pressed="true"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>PLASTIC</text></svg></span></button>
     <button class="material" data-material="paper" type="button" aria-label="Paper" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>PAPER</text></svg></span></button>
     <button class="material" data-material="metal" type="button" aria-label="Metal" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>METAL</text></svg></span></button>
+    <button class="material" data-material="organic" type="button" aria-label="Organic" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>ORGANIC</text></svg></span></button>
   </main>
   <p class="sound-status" role="status"></p>
   <script>
@@ -92,9 +93,10 @@
         };
         svg.setAttribute('viewBox', [box.x, box.y, box.width, box.height].join(' '));
         if (button.getAttribute('aria-pressed') === 'false') {
-          // Fixed 24px lettering, independent of the window size.
-          svg.style.width = box.width * 0.24 + 'px';
-          svg.style.height = box.height * 0.24 + 'px';
+          // Keep all three inactive choices inside their slots on narrow screens.
+          const scale = Math.min(0.24, (innerWidth/inactive.length-16)/box.width);
+          svg.style.width = box.width * scale + 'px';
+          svg.style.height = box.height * scale + 'px';
         } else {
           svg.style.removeProperty('width');
           svg.style.removeProperty('height');
