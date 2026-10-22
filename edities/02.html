@@ -27,7 +27,7 @@
     button:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
     .photo-piece {
       background-image: var(--piece-image, url('../images/redbull-can.png'));
-      background-size: auto 100%; background-position: 54% center; background-repeat: no-repeat;
+      background-size: contain; background-position: center; background-repeat: no-repeat;
       background-color: transparent;
     }
     .photo-piece {
@@ -87,10 +87,14 @@
   <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
   <nav class="material-choices" aria-label="Choose a photo">
     <button class="metal-choice" data-photo="metal" type="button" aria-pressed="false"><span>METAL</span></button>
+
+    <button class="metal-choice" data-photo="plastic" type="button" aria-pressed="false"><span>PLASTIC</span></button>
+    <button class="metal-choice" data-photo="paper" type="button" aria-pressed="false"><span>PAPER</span></button>
+    <button class="metal-choice" data-photo="organic" type="button" aria-pressed="false"><span>ORGANIC</span></button>
   </nav>
   <button class="throw-control" type="button">throw it out</button>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=cutout-1"></script>
+  <script src="../photos-game.js?v=materials-3"></script>
 </body>
 </html>

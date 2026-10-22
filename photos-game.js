@@ -1,6 +1,9 @@
 (() => {
   const choices = document.querySelectorAll('.metal-choice');
   const photos = {
+    plastic: {name:'Plastic', image:'../images/plastic.png', position:'center', width:'min(22svh, 178px)', height:'min(42svh, 340px)'},
+    paper: {name:'Paper', image:'../images/paper-box.png', position:'center', width:'min(76vw, 440px)', height:'min(42.4vw, 246px)'},
+    organic: {name:'Organic', image:'../images/leaf.png', position:'center', width:'min(20.5svh, 166px)', height:'min(42svh, 340px)'},
     metal: {name:'Metal', image:'../images/redbull-can.png', position:'center', width:'min(14.8svh, 120px)'},
   };
   let chosenButton = null;
@@ -37,6 +40,7 @@
     choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
     piece.style.setProperty('--piece-image', 'url("' + photo.image + '")');
     piece.style.setProperty('--photo-w', photo.width);
+    piece.style.setProperty('--photo-h', photo.height || 'min(42svh, 340px)');
     piece.style.backgroundPosition = photo.position;
     piece.setAttribute('aria-label', photo.name + ' photo. Drag back and release to throw after crumpling.');
     resetPhoto();
