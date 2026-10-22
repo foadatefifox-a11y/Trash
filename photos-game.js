@@ -7,7 +7,6 @@
     metal: {name:'Metal', image:'../images/redbull-can.png', position:'center', width:'min(14.8svh, 120px)'},
   };
   let chosenButton = null;
-  const control = document.querySelector('.throw-control');
   const piece = document.querySelector('.photo-piece');
   const guide = document.querySelector('.aim-path');
   const status = document.querySelector('.game-status');
@@ -31,7 +30,6 @@
     piece.className = 'photo-piece';
     piece.style.removeProperty('left'); piece.style.removeProperty('top');
     piece.style.removeProperty('--spin');
-    control.disabled = false;
     instruction.hidden = true;
     status.textContent = '';
   }
@@ -47,12 +45,12 @@
     resetPhoto();
   }
   choices.forEach(button => button.addEventListener('click', () => choose(button)));
-  control.addEventListener('click', () => {
+  function crumple() {
     if (state === 'hidden') {
       choose(chosenButton || choices[0]);
     }
     if (state !== 'photo') return;
-    state = 'crumpling'; control.disabled = true;
+    state = 'crumpling';
     photoSize = {width:piece.offsetWidth, height:piece.offsetHeight};
     piece.classList.add('crumpling');
     timer = setTimeout(() => {
@@ -64,6 +62,37 @@
       status.textContent = 'Drag the ball back, aim, and release.';
       piece.focus({preventScroll:true});
     }, 600);
+  }
+  // A small downward pull selects and crumples a material without a button.
+  [...choices, piece].forEach(element => {
+    let gesture = null, suppressClick = false;
+    element.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || (element === piece && state !== 'photo')) return;
+      gesture = {id:event.pointerId, y:event.clientY};
+      suppressClick = false;
+      element.setPointerCapture(event.pointerId);
+    });
+    element.addEventListener('pointermove', event => {
+      if (!gesture || event.pointerId !== gesture.id || event.clientY-gesture.y < 10) return;
+      event.preventDefault();
+      if (element !== piece) choose(element);
+      crumple();
+      suppressClick = true;
+      gesture = null;
+    });
+    const endGesture = () => { gesture = null; };
+    element.addEventListener('pointerup', endGesture);
+    element.addEventListener('pointercancel', endGesture);
+    element.addEventListener('click', event => {
+      if (suppressClick) {
+        event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false;
+      }
+    }, true);
+    element.addEventListener('keydown', event => {
+      if (element !== piece && event.key === 'ArrowDown') {
+        event.preventDefault(); choose(element); crumple();
+      }
+    });
   });
   function landingPoint() {
     return {x:Math.max(0,Math.min(innerWidth,anchor.x-pull.x*5)),
@@ -100,7 +129,7 @@
     document.querySelector('.photo-pile').append(thrown);
     flights.push({node:thrown, from:{...position}, end:landingPoint(), elapsed:0, size:{...photoSize}});
     piece.hidden=true; pointer=null; clearAim(); instruction.hidden=true;
-    control.disabled=false; state='hidden';
+    state='hidden';
     status.textContent='Thrown! Choose a material or throw another.';
   }
   piece.addEventListener('pointerup', event => {
@@ -132,8 +161,8 @@
       node.style.top=(from.y+(end.y-from.y)*t-120*4*t*(1-t))+'px';
       node.style.setProperty('--spin',(t*360)+'deg');
       if(t===1){
-        node.style.setProperty('--land-width',size.width*3+'px');
-        node.style.setProperty('--land-height',size.height*3+'px');
+        node.style.setProperty('--land-width',size.width*1.4+'px');
+        node.style.setProperty('--land-height',size.height*1.4+'px');
         node.className='landed-photo';
         flights.splice(i,1);
       }
