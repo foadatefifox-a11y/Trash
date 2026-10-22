@@ -38,13 +38,6 @@
       background-size: auto 180%;
     }
     .photo-piece.crumpled:active { cursor: grabbing; }
-    .photo-piece.crumpling { animation: crumple 600ms ease-in-out forwards; }
-    @keyframes crumple {
-      0% { width: var(--photo-w); height: var(--photo-h); top: 5svh; transform: translateX(-50%) rotate(0); }
-      35% { transform: translate(-50%,-20%) rotate(-18deg) scaleX(0.7); border-radius: 15%; }
-      70% { transform: translate(-50%,-40%) rotate(32deg) scaleX(1.1); border-radius: 35%; }
-      100% { width: var(--ball); height: var(--ball); top: 83svh; transform: translate(-50%,-50%) rotate(55deg); border-radius: 40%; }
-    }
     .photo-pile { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
     .thrown-photo { pointer-events: none; }
     .landed-photo {
@@ -61,7 +54,6 @@
     .aim-hint { top: 87svh; }
     .game-status { top: 1rem; }
     @media (prefers-reduced-motion: reduce) {
-      .photo-piece.crumpling { animation-duration: 1ms; }
       .metal-choice span { transition: none; }
       .landed-photo { animation: none; }
     }
@@ -77,14 +69,14 @@
   <svg class="aim-guide" aria-hidden="true"><path class="aim-path"></path></svg>
   <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
   <nav class="material-choices" aria-label="Choose a photo">
-    <button class="metal-choice" data-photo="metal" type="button" title="Drag down to crumple, or press Down Arrow" aria-pressed="false"><span>METAL</span></button>
+    <button class="metal-choice" data-photo="metal" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>METAL</span></button>
 
-    <button class="metal-choice" data-photo="plastic" type="button" title="Drag down to crumple, or press Down Arrow" aria-pressed="false"><span>PLASTIC</span></button>
-    <button class="metal-choice" data-photo="paper" type="button" title="Drag down to crumple, or press Down Arrow" aria-pressed="false"><span>PAPER</span></button>
-    <button class="metal-choice" data-photo="organic" type="button" title="Drag down to crumple, or press Down Arrow" aria-pressed="false"><span>ORGANIC</span></button>
+    <button class="metal-choice" data-photo="plastic" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>PLASTIC</span></button>
+    <button class="metal-choice" data-photo="paper" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>PAPER</span></button>
+    <button class="metal-choice" data-photo="organic" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>ORGANIC</span></button>
   </nav>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=larger-photos-1"></script>
+  <script src="../photos-game.js?v=ready-to-throw-1"></script>
 </body>
 </html>

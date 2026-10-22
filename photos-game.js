@@ -14,7 +14,7 @@
   let last = null;
   const flights = [];
   let photoSize;
-  let state = 'hidden', timer = null, pointer = null;
+  let state = 'hidden', pointer = null;
   let start, pull = {x:0,y:0}, anchor, position, rotation = 0;
   const radius = () => piece.getBoundingClientRect().width/2;
   const paint = () => {
@@ -23,16 +23,6 @@
     piece.style.setProperty('--spin', rotation + 'deg');
   };
   function clearAim() { guide.setAttribute('d',''); }
-  function resetPhoto() {
-    clearTimeout(timer); pointer = null; clearAim();
-    state = 'photo';
-    piece.hidden = false;
-    piece.className = 'photo-piece';
-    piece.style.removeProperty('left'); piece.style.removeProperty('top');
-    piece.style.removeProperty('--spin');
-    instruction.hidden = true;
-    status.textContent = '';
-  }
   function choose(button) {
     chosenButton = button;
     const photo = photos[button.dataset.photo];
@@ -43,59 +33,21 @@
     piece.style.setProperty('--photo-w', Math.sqrt(area*photo.ratio)*1.15+'px');
     piece.style.setProperty('--photo-h', Math.sqrt(area/photo.ratio)*1.15+'px');
     piece.style.backgroundPosition = 'center';
-    piece.setAttribute('aria-label', photo.name + ' photo. Drag back and release to throw after crumpling.');
-    resetPhoto();
+    photoSize = {
+      width:Math.round(Math.sqrt(area*photo.ratio)*1.15),
+      height:Math.round(Math.sqrt(area/photo.ratio)*1.15)
+    };
+    if(pointer!==null && piece.hasPointerCapture(pointer))piece.releasePointerCapture(pointer);
+    pointer=null; clearAim(); pull={x:0,y:0};
+    state='ready'; piece.hidden=false; piece.className='photo-piece crumpled';
+    anchor={x:innerWidth/2,y:innerHeight*0.83};
+    position={...anchor}; rotation=0; paint();
+    instruction.hidden=false;
+    status.textContent='Drag the ball back, aim, and release.';
+    piece.setAttribute('aria-label', photo.name + ' crumpled photo. Drag back and release to throw. Arrow keys aim, Enter throws.');
+    piece.focus({preventScroll:true});
   }
   choices.forEach(button => button.addEventListener('click', () => choose(button)));
-  function crumple() {
-    if (state === 'hidden') {
-      choose(chosenButton || choices[0]);
-    }
-    if (state !== 'photo') return;
-    state = 'crumpling';
-    photoSize = {width:piece.offsetWidth, height:piece.offsetHeight};
-    piece.classList.add('crumpling');
-    timer = setTimeout(() => {
-      state = 'ready';
-      piece.className = 'photo-piece crumpled';
-      anchor = {x:innerWidth/2,y:innerHeight*0.83};
-      position = {...anchor}; rotation = 0; paint();
-      instruction.hidden = false;
-      status.textContent = 'Drag the ball back, aim, and release.';
-      piece.focus({preventScroll:true});
-    }, 600);
-  }
-  // A small downward pull selects and crumples a material without a button.
-  [...choices, piece].forEach(element => {
-    let gesture = null, suppressClick = false;
-    element.addEventListener('pointerdown', event => {
-      if (event.button !== 0 || (element === piece && state !== 'photo')) return;
-      gesture = {id:event.pointerId, y:event.clientY};
-      suppressClick = false;
-      element.setPointerCapture(event.pointerId);
-    });
-    element.addEventListener('pointermove', event => {
-      if (!gesture || event.pointerId !== gesture.id || event.clientY-gesture.y < 10) return;
-      event.preventDefault();
-      if (element !== piece) choose(element);
-      crumple();
-      suppressClick = true;
-      gesture = null;
-    });
-    const endGesture = () => { gesture = null; };
-    element.addEventListener('pointerup', endGesture);
-    element.addEventListener('pointercancel', endGesture);
-    element.addEventListener('click', event => {
-      if (suppressClick) {
-        event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false;
-      }
-    }, true);
-    element.addEventListener('keydown', event => {
-      if (element !== piece && event.key === 'ArrowDown') {
-        event.preventDefault(); choose(element); crumple();
-      }
-    });
-  });
   function landingPoint() {
     return {x:Math.max(0,Math.min(innerWidth,anchor.x-pull.x*5)),
       y:Math.max(0,Math.min(innerHeight,anchor.y-pull.y*5))};
