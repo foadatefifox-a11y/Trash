@@ -10,9 +10,6 @@
     [hidden] { display: none !important; }
     :root { --ball: clamp(44px, 7vmin, 76px); --photo-w: min(14.8svh, 120px); --photo-h: min(42svh, 340px); }
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; }
-    .can-band { position: fixed; left: 0; width: 100%; top: 30vh; height: 50vh; top: 30svh; height: 50svh; }
-    .trashcan { position: absolute; left: 0; top: 50%; width: min(40.76923077vh, var(--can-width-limit)); width: min(40.76923077svh, var(--can-width-limit)); margin: 0; transform: translate3d(0,-50%,0); will-change: transform; }
-    .trashcan img { position: relative; z-index: 2; display: block; width: 100%; height: auto; pointer-events: none; }
     .metal-choice {
       position: fixed; left: 1rem; bottom: 0.35rem; z-index: 10;
       padding: 0.5rem; border: 0; background: transparent; color: transparent;
@@ -28,7 +25,7 @@
     }
     .throw-control:disabled { opacity: 0.45; cursor: default; }
     button:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
-    .photo-piece, .stored-piece {
+    .photo-piece {
       background-image: var(--piece-image, url('../images/redbull-can.png'));
       background-size: auto 100%; background-position: 54% center; background-repeat: no-repeat;
       background-color: #eee;
@@ -48,13 +45,13 @@
       filter: contrast(1.15);
     }
     .photo-piece.crumpled:active { cursor: grabbing; }
-    .photo-piece::after, .stored-piece::after {
+    .photo-piece::after {
       content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
       background: conic-gradient(from 35deg at 35% 40%, #fff8, #0008 14%, transparent 22%, #fff9 35%, #0009 50%, transparent 66%, #fff9 78%, #0009 88%, #fff8),
         repeating-linear-gradient(65deg, transparent 0 14%, #0006 15%, #fff6 17%, transparent 20% 32%);
       mix-blend-mode: multiply;
     }
-    .photo-piece.crumpled::after, .photo-piece.crumpling::after, .stored-piece::after { opacity: 1; }
+    .photo-piece.crumpled::after, .photo-piece.crumpling::after { opacity: 1; }
     .photo-piece.crumpling { animation: crumple 600ms ease-in-out forwards; }
     @keyframes crumple {
       0% { width: var(--photo-w); height: var(--photo-h); top: 5svh; transform: translateX(-50%) rotate(0); }
@@ -62,13 +59,6 @@
       70% { transform: translate(-50%,-40%) rotate(32deg) scaleX(1.1); border-radius: 35%; }
       100% { width: var(--ball); height: var(--ball); top: 83svh; transform: translate(-50%,-50%) rotate(55deg); border-radius: 40%; }
     }
-    .stored-piece {
-      position: absolute; z-index: 1; width: 18%; aspect-ratio: 1;
-      transform: translateX(-50%) rotate(var(--stored-spin));
-      border-radius: 40%; clip-path: polygon(21% 3%,68% 8%,87% 14%,100% 41%,91% 64%,70% 96%,45% 100%,6% 82%,0 54%,9% 31%);
-      background-size: auto 180%; animation: settle 400ms ease-out;
-    }
-    @keyframes settle { from { translate: 0 -80%; } to { translate: 0 0; } }
     .aim-guide { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
     .aim-path { fill: none; stroke: #fff9; stroke-width: 1.5px; stroke-dasharray: 3 8; }
     .aim-hint, .game-status {
@@ -79,7 +69,6 @@
     .game-status { top: 1rem; }
     @media (prefers-reduced-motion: reduce) {
       .photo-piece.crumpling { animation-duration: 1ms; }
-      .stored-piece { animation: none; }
       .metal-choice span { transition: none; }
     }
     .material-choices {
@@ -93,9 +82,6 @@
   </style>
 </head>
 <body>
-  <main class="can-band" aria-label="Moving trash can">
-    <figure class="trashcan"><img src="../trashcan.svg?v=white-outlines-2" alt="Trash can" width="212" height="260"></figure>
-  </main>
   <svg class="aim-guide" aria-hidden="true"><path class="aim-path"></path></svg>
   <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
   <nav class="material-choices" aria-label="Choose a photo">
@@ -105,6 +91,6 @@
   <button class="throw-control" type="button">throw it out</button>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=cookies-2"></script>
+  <script src="../photos-game.js?v=no-bin-1"></script>
 </body>
 </html>
