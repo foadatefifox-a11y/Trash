@@ -15,7 +15,12 @@
     .pattern { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), minmax(0, 1fr)); width: 100%; height: 100%; gap: clamp(12px, 2vw, 28px); }
     .object { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; pointer-events: none; user-select: none; }
     .single { display: none; }
-    .single.tilt-active { filter: var(--tone-filter, brightness(1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
+    @media (max-width: 600px) and (pointer: coarse) {
+      .single.tilt-active { filter: var(--tone-filter, brightness(1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
+    }
+    @media (min-width: 601px), (pointer: fine) {
+      .motion-control, .motion-status { display: none; }
+    }
     .motion-control { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 2; border: 1px solid #777; background: #000; color: #fff; padding: 8px 14px; font: 12px Arial, sans-serif; }
     .motion-status { position: fixed; bottom: 8px; left: 10mm; right: 10mm; margin: 0; text-align: center; color: #aaa; font: 12px Arial, sans-serif; pointer-events: none; }
     [hidden] { display: none !important; }
@@ -111,6 +116,7 @@
       screens.scrollLeft=index*screens.clientWidth;
     }
     layout(); window.addEventListener('resize',layout);
+    const phoneTilt=matchMedia('(max-width: 600px) and (pointer: coarse)');
     const motionButton=document.querySelector('.motion-control');
     const motionStatus=document.querySelector('.motion-status');
     const singles=[...screens.querySelectorAll('.single')];
@@ -147,7 +153,7 @@
       tiltFrame=currentTilt===desiredTilt ? null : requestAnimationFrame(renderTilt);
     }
     function handleTilt(event){
-      if(getComputedStyle(singles[0]).display==='none'||!matchMedia('(pointer: coarse)').matches)return;
+      if(!phoneTilt.matches)return;
       if(!Number.isFinite(event.gamma)||!Number.isFinite(event.beta))return;
       const angle=screen.orientation?.angle ?? window.orientation ?? 0;
       const radians=angle*Math.PI/180;
@@ -164,7 +170,7 @@
       listening=true;
     }
     const orientationAPI=window.DeviceOrientationEvent;
-    if(matchMedia('(pointer: coarse)').matches){
+    if(phoneTilt.matches){
       if(!window.isSecureContext){
         motionStatus.textContent='Open this page over HTTPS to enable tilt.';
       }else if(!orientationAPI){
@@ -176,6 +182,7 @@
       }
     }
     motionButton.addEventListener('click',async()=>{
+      if(!phoneTilt.matches)return;
       try{
         const permission=await orientationAPI.requestPermission();
         if(permission==='granted'){
