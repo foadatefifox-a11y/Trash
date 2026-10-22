@@ -15,6 +15,10 @@
     .pattern { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), minmax(0, 1fr)); width: 100%; height: 100%; gap: clamp(12px, 2vw, 28px); }
     .object { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; pointer-events: none; user-select: none; }
     .single { display: none; }
+    .single.tilt-active { filter: var(--tone-filter, brightness(1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
+    .motion-control { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 2; border: 1px solid #777; background: #000; color: #fff; padding: 8px 14px; font: 12px Arial, sans-serif; }
+    .motion-status { position: fixed; bottom: 8px; left: 10mm; right: 10mm; margin: 0; text-align: center; color: #aaa; font: 12px Arial, sans-serif; pointer-events: none; }
+    [hidden] { display: none !important; }
     @media (min-width: 601px) and (hover: hover) and (pointer: fine) {
       .pattern .object { filter: var(--tone-filter, brightness(1)) contrast(var(--contrast, 1)) brightness(var(--brightness, 1)) saturate(var(--saturation, 1)); }
     }
@@ -31,6 +35,8 @@
 </head>
 <body>
   <main class="screens" tabindex="0" aria-label="Trashy screens. Swipe horizontally or use Left and Right Arrow to change material."></main>
+  <button class="motion-control" type="button" hidden>Enable tilt</button>
+  <p class="motion-status" role="status"></p>
   <script>
     const materials = [
       {name:'Plastic', file:'plastic.png', width:466, height:888, box:[0,0,466,888]},
@@ -105,6 +111,83 @@
       screens.scrollLeft=index*screens.clientWidth;
     }
     layout(); window.addEventListener('resize',layout);
+    const motionButton=document.querySelector('.motion-control');
+    const motionStatus=document.querySelector('.motion-status');
+    const singles=[...screens.querySelectorAll('.single')];
+    const tiltFilters=singles.map((photo,i)=>{
+      const defs=document.createElementNS(ns,'defs');
+      const filter=document.createElementNS(ns,'filter');
+      filter.id=`tilt-tones-${i}`; filter.setAttribute('color-interpolation-filters','sRGB');
+      const transfer=document.createElementNS(ns,'feComponentTransfer');
+      const channels=['R','G','B'].map(channel=>{
+        const fn=document.createElementNS(ns,'feFunc'+channel);
+        fn.setAttribute('type','table'); transfer.append(fn); return fn;
+      });
+      filter.append(transfer); defs.append(filter); photo.prepend(defs);
+      return channels;
+    });
+    let desiredTilt=0, currentTilt=0, tiltFrame=null;
+    function renderTilt(){
+      currentTilt+=(desiredTilt-currentTilt)*0.2;
+      if(Math.abs(desiredTilt-currentTilt)<0.001)currentTilt=desiredTilt;
+      const strength=Math.abs(currentTilt);
+      const brightness=currentTilt<0 ? 1+1.3*strength : 1-0.75*strength;
+      const values=Array.from({length:33},(_,n)=>{
+        const original=n/32;
+        return original*(1-strength)+Math.round(original*4)/4*strength;
+      }).join(' ');
+      singles.forEach((photo,i)=>{
+        tiltFilters[i].forEach(fn=>fn.setAttribute('tableValues',values));
+        photo.style.setProperty('--tone-filter',`url(#tilt-tones-${i})`);
+        photo.style.setProperty('--brightness',brightness);
+        photo.style.setProperty('--contrast',1+1.8*strength);
+        photo.style.setProperty('--saturation',1-0.6*strength);
+        photo.classList.add('tilt-active');
+      });
+      tiltFrame=currentTilt===desiredTilt ? null : requestAnimationFrame(renderTilt);
+    }
+    function handleTilt(event){
+      if(getComputedStyle(singles[0]).display==='none'||!matchMedia('(pointer: coarse)').matches)return;
+      if(!Number.isFinite(event.gamma)||!Number.isFinite(event.beta))return;
+      const angle=screen.orientation?.angle ?? window.orientation ?? 0;
+      const radians=angle*Math.PI/180;
+      const roll=event.gamma*Math.cos(radians)+event.beta*Math.sin(radians);
+      // Two degrees of rest; full desktop extremes at 45 degrees either way.
+      desiredTilt=Math.sign(roll)*Math.min(1,Math.max(0,Math.abs(roll)-2)/43);
+      motionStatus.textContent='';
+      if(tiltFrame===null)tiltFrame=requestAnimationFrame(renderTilt);
+    }
+    let listening=false;
+    function listenForTilt(){
+      if(listening)return;
+      window.addEventListener('deviceorientation',handleTilt);
+      listening=true;
+    }
+    const orientationAPI=window.DeviceOrientationEvent;
+    if(matchMedia('(pointer: coarse)').matches){
+      if(!window.isSecureContext){
+        motionStatus.textContent='Open this page over HTTPS to enable tilt.';
+      }else if(!orientationAPI){
+        motionStatus.textContent='Tilt is unavailable in this browser.';
+      }else if(typeof orientationAPI.requestPermission==='function'){
+        motionButton.hidden=false;
+      }else{
+        listenForTilt();
+      }
+    }
+    motionButton.addEventListener('click',async()=>{
+      try{
+        const permission=await orientationAPI.requestPermission();
+        if(permission==='granted'){
+          listenForTilt(); motionButton.hidden=true; motionStatus.textContent='';
+        }else{
+          motionStatus.textContent='Allow motion access in your browser settings to use tilt.';
+          motionButton.hidden=true;
+        }
+      }catch{
+        motionStatus.textContent='Motion access failed. Tap Enable tilt to try again.';
+      }
+    });
     screens.addEventListener('keydown',event=>{
       if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
       event.preventDefault();
