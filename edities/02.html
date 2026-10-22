@@ -21,7 +21,7 @@
     button:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
     .photo-piece {
       background-image: var(--piece-image, url('../images/redbull-can.png'));
-      background-size: contain; background-position: center; background-repeat: no-repeat;
+      background-size: auto 100%; background-position: center; background-repeat: no-repeat;
       background-color: transparent;
     }
     .photo-piece {
@@ -49,13 +49,8 @@
     .thrown-photo { pointer-events: none; }
     .landed-photo {
       position: absolute; width: var(--land-width); height: var(--land-height);
-      background: var(--piece-image) center / contain no-repeat;
+      background: var(--piece-image) center / auto 100% no-repeat;
       transform: translate(-50%, -50%); pointer-events: none;
-      animation: unfold 450ms ease-out;
-    }
-    @keyframes unfold {
-      from { scale: 0.15; rotate: 20deg; }
-      to { scale: 1; rotate: 0deg; }
     }
     .aim-guide { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
     .aim-path { fill: none; stroke: #fff9; stroke-width: 1.5px; stroke-dasharray: 3 8; }
@@ -93,6 +88,6 @@
   </nav>
   <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
   <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=drag-crumple-1"></script>
+  <script src="../photos-game.js?v=steady-landing-1"></script>
 </body>
 </html>

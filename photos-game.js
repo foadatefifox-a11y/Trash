@@ -1,10 +1,10 @@
 (() => {
   const choices = document.querySelectorAll('.metal-choice');
   const photos = {
-    plastic: {name:'Plastic', image:'../images/plastic.png', position:'center', width:'min(22svh, 178px)', height:'min(42svh, 340px)'},
-    paper: {name:'Paper', image:'../images/paper-box.png', position:'center', width:'min(76vw, 440px)', height:'min(42.4vw, 246px)'},
-    organic: {name:'Organic', image:'../images/leaf.png', position:'center', width:'min(20.5svh, 166px)', height:'min(42svh, 340px)'},
-    metal: {name:'Metal', image:'../images/redbull-can.png', position:'center', width:'min(14.8svh, 120px)'},
+    plastic: {name:'Plastic', image:'../images/plastic.png', ratio:466/888},
+    paper: {name:'Paper', image:'../images/paper-box.png', ratio:960/536},
+    organic: {name:'Organic', image:'../images/leaf.png', ratio:324/851},
+    metal: {name:'Metal', image:'../images/redbull-can.png', ratio:0.35},
   };
   let chosenButton = null;
   const piece = document.querySelector('.photo-piece');
@@ -38,9 +38,11 @@
     const photo = photos[button.dataset.photo];
     choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
     piece.style.setProperty('--piece-image', 'url("' + photo.image + '")');
-    piece.style.setProperty('--photo-w', photo.width);
-    piece.style.setProperty('--photo-h', photo.height || 'min(42svh, 340px)');
-    piece.style.backgroundPosition = photo.position;
+    // Give every silhouette the same area while preserving its proportions.
+    const area = Math.min(22000, (innerWidth*.42)**2, (innerHeight*.32)**2);
+    piece.style.setProperty('--photo-w', Math.sqrt(area*photo.ratio)+'px');
+    piece.style.setProperty('--photo-h', Math.sqrt(area/photo.ratio)+'px');
+    piece.style.backgroundPosition = 'center';
     piece.setAttribute('aria-label', photo.name + ' photo. Drag back and release to throw after crumpling.');
     resetPhoto();
   }
@@ -100,7 +102,7 @@
   }
   function drawAim() {
     const end = landingPoint();
-    guide.setAttribute('d', `M ${position.x} ${position.y} Q ${(position.x+end.x)/2} ${Math.min(position.y,end.y)-120} ${end.x} ${end.y}`);
+    guide.setAttribute('d', `M ${position.x} ${position.y} L ${end.x} ${end.y}`);
   }
   piece.addEventListener('pointerdown', event => {
     if(state!=='ready'||event.button!==0)return;
@@ -112,11 +114,11 @@
     if(event.pointerId!==pointer||state!=='ready')return;
     event.preventDefault();
     const dx=event.clientX-start.x,dy=event.clientY-start.y;
-    const limit=Math.min(innerWidth*.3,innerHeight*.2);
+    const limit=Math.max(innerWidth,innerHeight)*.35;
     const scale=Math.min(1,limit/Math.max(1,Math.hypot(dx,dy)));
     const r=radius();
     position={x:Math.max(r,Math.min(innerWidth-r,anchor.x+dx*scale)),y:Math.max(r,Math.min(innerHeight-r-8,anchor.y+dy*scale))};
-    pull={x:position.x-anchor.x,y:position.y-anchor.y}; paint(); drawAim();
+    pull={x:dx*scale,y:dy*scale}; paint(); drawAim();
   });
   function launch() {
     if(state!=='ready')return;
@@ -158,7 +160,7 @@
       const t=Math.min(1,flight.elapsed/.65);
       const {node,from,end,size}=flight;
       node.style.left=(from.x+(end.x-from.x)*t)+'px';
-      node.style.top=(from.y+(end.y-from.y)*t-120*4*t*(1-t))+'px';
+      node.style.top=(from.y+(end.y-from.y)*t)+'px';
       node.style.setProperty('--spin',(t*360)+'deg');
       if(t===1){
         node.style.setProperty('--land-width',size.width*1.4+'px');
