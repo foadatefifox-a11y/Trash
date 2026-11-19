@@ -1,10 +1,8 @@
 const cockroach = document.querySelector('.cockroach');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const minute = 60_000;
-let sightings = 0;
-let remaining = minute;
-let deadline;
-let timer;
+const interval = 10_000;
+let nextSighting = Date.now() + interval;
+let missedSighting = false;
 
 function scurry() {
 
@@ -18,7 +16,7 @@ function scurry() {
     cockroach.animate([{ transform }, { transform }], { duration: 2400 });
     return;
   }
-  const margin = 80;
+  const margin = 110;
   const horizontal = Math.random() < 0.8;
   const reverse = Math.random() < 0.5;
   const distance = horizontal ? width : height;
@@ -50,34 +48,21 @@ function scurry() {
     };
   });
 
-  const duration = Math.min(2500, Math.max(1600, distance * 1.6)) * (0.9 + Math.random() * 0.2);
+  const duration = Math.min(3600, Math.max(2600, distance * 2.4)) * (0.9 + Math.random() * 0.2);
   cockroach.animate(frames, { duration, easing: 'linear' });
 }
 
-function scheduleSighting() {
-  if (document.hidden || timer !== undefined) return;
-  deadline = performance.now() + remaining;
-  timer = window.setTimeout(() => {
-    timer = undefined;
-    if (document.hidden) {
-      remaining = 0;
-      return;
-    }
+function checkSighting() {
+  const now = Date.now();
+  if (now >= nextSighting) {
+    nextSighting += (Math.floor((now - nextSighting) / interval) + 1) * interval;
+    missedSighting = true;
+  }
+  if (missedSighting && !document.hidden) {
+    missedSighting = false;
     scurry();
-    sightings += 1;
-    remaining = sightings < 4 ? minute : 5 * minute;
-    scheduleSighting();
-  }, remaining);
+  }
 }
 
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    scheduleSighting();
-  } else if (timer !== undefined) {
-    window.clearTimeout(timer);
-    timer = undefined;
-    remaining = Math.max(0, deadline - performance.now());
-  }
-});
-
-scheduleSighting();
+window.setInterval(checkSighting, interval);
+document.addEventListener('visibilitychange', checkSighting);
