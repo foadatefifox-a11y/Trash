@@ -5,7 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>trashy design | trashiseeintrashydays</title>
-  <style>html, body { margin: 0; background: #000; }</style>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #000; }
+    body { display: grid; grid-template-rows: minmax(0, 1fr) auto; color: #eee; font: 14px/1.4 system-ui, sans-serif; }
+    .board { position: relative; overflow: hidden; touch-action: none; }
+    .board button { position: absolute; padding: 0; border: 0; background: transparent; color: inherit; touch-action: none; }
+    .piece { left: 0; top: 0; cursor: grab; user-select: none; }
+    .piece:active { cursor: grabbing; }
+    .piece img { display: block; width: 100%; height: 100%; pointer-events: none; }
+    .piece[aria-pressed="true"] img { filter: drop-shadow(0 0 4px #ffe7a878); }
+    button:focus-visible { outline: 1px solid #f8dc85; outline-offset: 3px; }
+    .board .rotate {
+      transform: translateX(-50%); z-index: 2;
+      width: 44px; height: 44px; border-radius: 50%;
+      display: grid; place-items: center; cursor: grab;
+    }
+    .rotate:hover, .rotate:focus-visible { background: #ffffff20; }
+    .rotate:active { cursor: grabbing; }
+    .rotate svg { width: 25px; height: 25px; pointer-events: none; }
+    [hidden] { display: none !important; }
+    .join { position: absolute; z-index: 3; pointer-events: none; width: 12px; height: 12px; border: 1px solid #ffebaa; border-radius: 50%; transform: translate(-50%, -50%); }
+    .tools { text-align: center; padding: .35rem 1rem max(.85rem, env(safe-area-inset-bottom)); }
+    .tools p { margin: 0 0 .45rem; color: #bbb; }
+    .picker { display: flex; justify-content: center; gap: .5rem; }
+    .picker button {
+      display: grid; place-items: center; width: 56px; height: 58px; padding: .3rem;
+      border: 1px solid #48433b; border-radius: .45rem; color: inherit; background: #12110f; cursor: pointer;
+    }
+    .picker button:hover { border-color: #f8dc85; }
+    .picker img { display: block; height: 42px; width: auto; pointer-events: none; }
+  </style>
 </head>
-<body></body>
+<body>
+  <main class="board" aria-label="Pasta architecture canvas">
+    <div class="join" hidden aria-hidden="true"></div>
+    <button class="rotate" type="button" hidden aria-label="Rotate selected pasta" title="Drag to rotate, or tap to turn 15 degrees">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 10a8 8 0 1 0-2.5 8M20 5v5h-5"/>
+      </svg>
+    </button>
+  </main>
+  <footer class="tools">
+    <p>Drag pieces together to snap. Select a piece to rotate it.</p>
+    <div class="picker" aria-label="Add pasta">
+      <button type="button" data-add="curved" aria-label="Add curved pasta" title="Add curved pasta"><img src="../images/pasta-piece-1.webp" alt=""></button>
+      <button type="button" data-add="straight" aria-label="Add straight pasta" title="Add straight pasta"><img src="../images/pasta-piece-2.webp" alt=""></button>
+    </div>
+  </footer>
+  <script src="pasta-design.js" defer></script>
+</body>
 </html>
