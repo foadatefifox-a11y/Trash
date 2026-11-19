@@ -15,14 +15,16 @@
   }
 
   function prepareCleanup() {
-    if (target) return;
+    if (target) return true;
+    target = document.querySelector('.material[aria-pressed="true"]:not([hidden])');
+    if (!target) return false;
     window.cleanupAudio?.prepare();
-    target = document.querySelector('.material[aria-pressed="true"]');
     original = target.querySelector('text');
     const svg = target.querySelector('svg');
     // Read positions before splitting so kerning, size and letter shapes stay intact.
     const positions = [...original.textContent].map((char, i) => ({char, p: original.getStartPositionOfChar(i)}));
     positions.forEach(({char, p}) => {
+      if (!char.trim()) return;
       const group = document.createElementNS(ns, 'g');
       group.classList.add('loose-letter');
       const text = original.cloneNode(false);
@@ -31,17 +33,32 @@
       text.setAttribute('y', p.y);
       group.append(text);
       svg.append(group);
-      letters.push({node: group, x: 0, y: 0, attached: false, gone: false, frame: 0});
+      letters.push({node: group, x: 0, y: 0, attached: false, gone: false, finished: false, frame: 0});
     });
     original.style.visibility = 'hidden';
     target.classList.add('cleaning');
     window.cleaningWord = target;
+    return true;
   }
 
   // Selecting the other material restores this word and leaves the new one intact.
-  document.querySelectorAll('.material').forEach(button => button.addEventListener('click', () => {
-    if (target && button !== target) reset();
+  document.querySelectorAll('.material').forEach(button => button.addEventListener('click', event => {
+    if (!target || button === target) return;
+    if (letters.every(letter => letter.gone)) {
+      event.stopImmediatePropagation();
+      return;
+    }
+    reset();
   }, true));
+
+  function finishWord() {
+    if (!letters.every(letter => letter.finished)) return;
+    target.hidden = true;
+    reset();
+    const next = document.querySelector('.material:not([hidden])');
+    if (next) next.click();
+    else window.trashyRoaches?.clear();
+  }
   window.addEventListener('resize', () => {
     if (!target) return;
     // Letter offsets are in SVG coordinates, so they scale with the word.
@@ -55,7 +72,7 @@
   function paint(letter) {
     letter.node.setAttribute('transform', `translate(${letter.x} ${letter.y})`);
   }
-  function touches(x1, y1, x2, y2, r) {
+  function touches(x1, y1, x2, y2, r, blocked) {
     // Segment/expanded-rectangle intersection catches fast sweeping strokes.
     let low = 0, high = 1;
     for (const [a, delta, min, max] of [[x1,x2-x1,r.left-10,r.right+10],[y1,y2-y1,r.top-10,r.bottom+10]]) {
@@ -67,17 +84,28 @@
         if (low > high) return false;
       }
     }
-    return true;
+    const steps = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) * (high - low) / 5));
+    for (let index = 0; index <= steps; index++) {
+      const t = low + (high - low) * index / steps;
+      if (!blocked(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return true;
+    }
+    return false;
   }
   function move(event) {
     if (!target || event.pointerId !== pointer) return;
     event.preventDefault();
     const a = point(previous.x, previous.y), b = point(event.clientX, event.clientY);
+    const blocked = window.trashyRoaches?.getBlocker() ?? (() => false);
+    const covered = blocked(event.clientX, event.clientY);
     let moved = false;
     letters.forEach(letter => {
       if (letter.gone) return;
       const rect = letter.node.getBoundingClientRect();
-      if (!letter.attached && touches(previous.x, previous.y, event.clientX, event.clientY, rect)) letter.attached = true;
+      if (!letter.attached && touches(previous.x, previous.y, event.clientX, event.clientY, rect, blocked)) letter.attached = true;
+      if (covered) {
+        letter.attached = false;
+        return;
+      }
       if (letter.attached) {
         letter.x += b.x-a.x; letter.y += b.y-a.y; paint(letter);
         if (b.x !== a.x || b.y !== a.y) moved = true;
@@ -91,7 +119,7 @@
   }
   document.addEventListener('pointerdown', event => {
     if (event.button !== 0 || event.target.closest('.material[aria-pressed="false"]')) return;
-    prepareCleanup();
+    if (pointer !== null || !prepareCleanup() || letters.every(letter => letter.gone)) return;
     pointer = event.pointerId;
     previous = {x:event.clientX,y:event.clientY};
     event.preventDefault();
@@ -115,7 +143,11 @@
           const t = Math.min(1, (now-start)/250);
           letter.x = from + distance*t; paint(letter);
           if (t < 1) letter.frame = requestAnimationFrame(animate);
-          else letter.node.style.visibility = 'hidden';
+          else {
+            letter.node.style.visibility = 'hidden';
+            letter.finished = true;
+            finishWord();
+          }
         };
         letter.frame = requestAnimationFrame(animate);
       }

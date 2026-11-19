@@ -7,6 +7,7 @@
   <title>trashy text | trashiseeintrashydays</title>
   <style>
     * { box-sizing: border-box; }
+    .material[hidden] { display: none; }
     html, body { margin: 0; width: 100%; height: 100%; color: #000; }
     body { background: #fff; }
     .materials { width: 100%; height: 100vh; height: 100svh; }
@@ -90,8 +91,9 @@
 
     const glyphContext = document.createElement('canvas').getContext('2d');
     function updateTypography() {
-      const inactive = [...materials].filter(button => button.getAttribute('aria-pressed') === 'false');
-      materials.forEach(button => {
+      const visible = [...materials].filter(button => !button.hidden);
+      const inactive = visible.filter(button => button.getAttribute('aria-pressed') === 'false');
+      visible.forEach(button => {
         const slot = inactive.indexOf(button);
         button.style.left = slot < 0 ? '0' : (slot * 100 / inactive.length) + '%';
         button.style.width = slot < 0 ? '100%' : (100 / inactive.length) + '%';
@@ -325,7 +327,7 @@
     });
     window.addEventListener('pagehide', stopSound);
   </script>
-  <script src="../cleanup.js?v=direct-sweep-1"></script>
-  <script src="cockroach.js?v=white-wall-1" defer></script>
+  <script src="../cleanup.js?v=roach-sweep-1"></script>
+  <script src="cockroach.js?v=swarm-five-1" defer></script>
 </body>
 </html>

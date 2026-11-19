@@ -1,11 +1,13 @@
 const cockroach = document.querySelector('.cockroach');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const interval = 10_000;
-let nextSighting = Date.now() + interval;
-let missedSighting = true;
+const roaches = [];
+const maximum = 5;
+const increaseEvery = 8000;
+let started;
+let timer;
+let stopped = false;
 
-function scurry() {
-
+function scurry(cockroach) {
 
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -13,8 +15,7 @@ function scurry() {
     const x = width * (.2 + Math.random() * .6);
     const y = height * (.2 + Math.random() * .6);
     const transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-    cockroach.animate([{ transform }, { transform }], { duration: 2400 });
-    return;
+    return cockroach.animate([{ transform }, { transform }], { duration: 1700 });
   }
   const margin = 110;
   const horizontal = Math.random() < 0.8;
@@ -48,26 +49,67 @@ function scurry() {
     };
   });
 
-  const duration = Math.min(3600, Math.max(2600, distance * 2.4)) * (0.9 + Math.random() * 0.2);
-  cockroach.animate(frames, { duration, easing: 'linear' });
+  const duration = Math.min(2050, Math.max(900, distance * 1.45)) * (0.82 + Math.random() * 0.36);
+  return cockroach.animate(frames, { duration, easing: 'linear' });
 }
 
-function checkSighting() {
-  const now = Date.now();
-  if (now >= nextSighting) {
-    nextSighting += (Math.floor((now - nextSighting) / interval) + 1) * interval;
-    missedSighting = true;
+function run(roach) {
+  if (stopped || document.hidden) return;
+  const animation = scurry(roach.image);
+  roach.animation = animation;
+  animation.onfinish = () => {
+    roach.animation = null;
+    roach.readyAt = performance.now() + 220 + Math.random() * 430;
+  };
+}
+
+function updateSwarm() {
+  if (stopped || document.hidden) return;
+  const now = performance.now();
+  const count = Math.min(maximum, 1 + Math.floor((now - started) / increaseEvery));
+  while (roaches.length < count) {
+    const image = roaches.length === 0 ? cockroach : cockroach.cloneNode();
+    if (image !== cockroach) cockroach.after(image);
+    roaches.push({ image, animation: null, readyAt: now });
   }
-  if (missedSighting && !document.hidden) {
-    missedSighting = false;
-    scurry();
+  for (const roach of roaches) {
+    if (!roach.animation && roach.readyAt <= now) run(roach);
   }
 }
 
-function startSightings() {
-  window.setTimeout(checkSighting, 450);
-  window.setInterval(checkSighting, interval);
+function getBlocker() {
+  // Use the rotated body rather than the full image rectangle (which includes antennae).
+  const bodies = roaches.filter(roach => roach.animation).map(({image}) => {
+    const transform = new DOMMatrixReadOnly(getComputedStyle(image).transform).inverse();
+    const halfWidth = image.offsetWidth / 2;
+    const halfHeight = image.offsetHeight / 2;
+    return { transform, halfWidth, halfHeight };
+  });
+  return (x, y) => bodies.some(({transform, halfWidth, halfHeight}) => {
+    const local = new DOMPoint(x - halfWidth, y - halfHeight).matrixTransform(transform);
+    return (local.x / (halfWidth * .57)) ** 2 + ((local.y - halfHeight * .12) / (halfHeight * .76)) ** 2 <= 1;
+  });
 }
 
-cockroach.decode().then(startSightings, startSightings);
-document.addEventListener('visibilitychange', checkSighting);
+window.trashyRoaches = {
+  getBlocker,
+  clear() {
+    stopped = true;
+    window.clearInterval(timer);
+    for (const roach of roaches) {
+      roach.animation?.cancel();
+      roach.image.remove();
+    }
+    cockroach.remove();
+    roaches.length = 0;
+  }
+};
+
+function start() {
+  if (stopped) return;
+  started = performance.now();
+  updateSwarm();
+  timer = window.setInterval(updateSwarm, 150);
+}
+
+cockroach.decode().then(start, start);
