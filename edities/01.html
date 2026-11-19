@@ -47,6 +47,18 @@
     }
     .material[aria-pressed="true"] { cursor: grab; touch-action: none; user-select: none; }
     .material.cleaning:active { cursor: grabbing; }
+    .cockroach {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      width: clamp(38px, 6vw, 64px);
+      height: auto;
+      transform: translate(-100%, -100%);
+      pointer-events: none;
+      user-select: none;
+    }
+    @media (prefers-reduced-motion: reduce) { .cockroach { display: none; } }
   </style>
 </head>
 <body>
@@ -56,6 +68,7 @@
     <button class="material" data-material="metal" type="button" aria-label="Metal can" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>METAL CAN</text></svg></span></button>
     <button class="material" data-material="organic" type="button" aria-label="Apple" aria-pressed="false"><span><svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true"><text>APPLE</text></svg></span></button>
   </main>
+  <img class="cockroach" src="cockroach.webp" alt="" draggable="false">
   <p class="sound-status" role="status"></p>
   <script>
     const materials = document.querySelectorAll('.material');
@@ -313,5 +326,6 @@
     window.addEventListener('pagehide', stopSound);
   </script>
   <script src="../cleanup.js?v=direct-sweep-1"></script>
+  <script src="cockroach.js" defer></script>
 </body>
 </html>
