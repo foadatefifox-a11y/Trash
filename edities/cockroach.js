@@ -2,12 +2,22 @@ const cockroach = document.querySelector('.cockroach');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const minute = 60_000;
 let sightings = 0;
+let remaining = minute;
+let deadline;
+let timer;
 
 function scurry() {
-  if (document.hidden || reducedMotion.matches) return;
+
 
   const width = window.innerWidth;
   const height = window.innerHeight;
+  if (reducedMotion.matches) {
+    const x = width * (.2 + Math.random() * .6);
+    const y = height * (.2 + Math.random() * .6);
+    const transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    cockroach.animate([{ transform }, { transform }], { duration: 2400 });
+    return;
+  }
   const margin = 80;
   const horizontal = Math.random() < 0.8;
   const reverse = Math.random() < 0.5;
@@ -40,14 +50,34 @@ function scurry() {
     };
   });
 
-  const duration = Math.min(1900, Math.max(700, distance * 1.1)) * (0.85 + Math.random() * 0.3);
+  const duration = Math.min(2500, Math.max(1600, distance * 1.6)) * (0.9 + Math.random() * 0.2);
   cockroach.animate(frames, { duration, easing: 'linear' });
 }
 
-function nextSighting() {
-  scurry();
-  sightings += 1;
-  window.setTimeout(nextSighting, sightings < 4 ? minute : 5 * minute);
+function scheduleSighting() {
+  if (document.hidden || timer !== undefined) return;
+  deadline = performance.now() + remaining;
+  timer = window.setTimeout(() => {
+    timer = undefined;
+    if (document.hidden) {
+      remaining = 0;
+      return;
+    }
+    scurry();
+    sightings += 1;
+    remaining = sightings < 4 ? minute : 5 * minute;
+    scheduleSighting();
+  }, remaining);
 }
 
-window.setTimeout(nextSighting, minute);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    scheduleSighting();
+  } else if (timer !== undefined) {
+    window.clearTimeout(timer);
+    timer = undefined;
+    remaining = Math.max(0, deadline - performance.now());
+  }
+});
+
+scheduleSighting();
