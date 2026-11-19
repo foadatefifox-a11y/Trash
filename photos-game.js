@@ -1,53 +1,32 @@
 (() => {
-  const choices = document.querySelectorAll('.metal-choice');
-  const photos = {
-    plastic: {name:'Plastic', image:'../images/plastic.png', ratio:466/888},
-    paper: {name:'Paper', image:'../images/paper-box.png', ratio:960/536},
-    organic: {name:'Organic', image:'../images/leaf.png', ratio:324/851},
-    metal: {name:'Metal', image:'../images/redbull-can.png', ratio:0.35},
+  const paper = {
+    closed: '../images/dirty-paper-closed.webp',
+    open: '../images/dirty-paper-open.webp'
   };
-  let chosenButton = null;
+  const pile = document.querySelector('.photo-pile');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const piece = document.querySelector('.photo-piece');
   const guide = document.querySelector('.aim-path');
-  const status = document.querySelector('.game-status');
-  const instruction = document.querySelector('.aim-hint');
   let last = null;
   const flights = [];
-  let photoSize;
-  let state = 'hidden', pointer = null;
-  let start, pull = {x:0,y:0}, anchor, position, rotation = 0;
+  let pointer = null;
+  let start, pull, anchor, position;
   const radius = () => piece.getBoundingClientRect().width/2;
   const paint = () => {
     piece.style.left = position.x + 'px';
     piece.style.top = position.y + 'px';
-    piece.style.setProperty('--spin', rotation + 'deg');
   };
   function clearAim() { guide.setAttribute('d',''); }
-  function choose(button) {
-    chosenButton = button;
-    const photo = photos[button.dataset.photo];
-    choices.forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
-    piece.style.setProperty('--piece-image', 'url("' + photo.image + '")');
-    // Give every silhouette the same area while preserving its proportions.
-    const area = Math.min(22000, (innerWidth*.42)**2, (innerHeight*.32)**2);
-    piece.style.setProperty('--photo-w', Math.sqrt(area*photo.ratio)*1.15+'px');
-    piece.style.setProperty('--photo-h', Math.sqrt(area/photo.ratio)*1.15+'px');
-    piece.style.backgroundPosition = 'center';
-    photoSize = {
-      width:Math.round(Math.sqrt(area*photo.ratio)*1.15),
-      height:Math.round(Math.sqrt(area/photo.ratio)*1.15)
-    };
-    if(pointer!==null && piece.hasPointerCapture(pointer))piece.releasePointerCapture(pointer);
-    pointer=null; clearAim(); pull={x:0,y:0};
-    state='ready'; piece.hidden=false; piece.className='photo-piece crumpled';
-    anchor={x:innerWidth/2,y:innerHeight*0.83};
-    position={...anchor}; rotation=0; paint();
-    instruction.hidden=false;
-    status.textContent='Drag the ball back, aim, and release.';
-    piece.setAttribute('aria-label', photo.name + ' crumpled photo. Drag back and release to throw. Arrow keys aim, Enter throws.');
-    piece.focus({preventScroll:true});
+  function resetPaper() {
+    if (pointer !== null && piece.hasPointerCapture(pointer)) piece.releasePointerCapture(pointer);
+    pointer = null;
+    anchor = {x:innerWidth/2, y:innerHeight*.83};
+    position = {...anchor};
+    pull = {x:0, y:0};
+    paint();
+    clearAim();
   }
-  choices.forEach(button => button.addEventListener('click', () => choose(button)));
+  resetPaper();
   function landingPoint() {
     return {x:Math.max(0,Math.min(innerWidth,anchor.x-pull.x*5)),
       y:Math.max(0,Math.min(innerHeight,anchor.y-pull.y*5))};
@@ -57,13 +36,13 @@
     guide.setAttribute('d', `M ${position.x} ${position.y} L ${end.x} ${end.y}`);
   }
   piece.addEventListener('pointerdown', event => {
-    if(state!=='ready'||event.button!==0)return;
+    if(pointer !== null || event.button !== 0)return;
     event.preventDefault(); pointer=event.pointerId;
     piece.setPointerCapture(pointer);
     start={x:event.clientX,y:event.clientY}; pull={x:0,y:0};
   });
   piece.addEventListener('pointermove', event => {
-    if(event.pointerId!==pointer||state!=='ready')return;
+    if(event.pointerId !== pointer)return;
     event.preventDefault();
     const dx=event.clientX-start.x,dy=event.clientY-start.y;
     const limit=Math.max(innerWidth,innerHeight)*.35;
@@ -73,29 +52,26 @@
     pull={x:dx*scale,y:dy*scale}; paint(); drawAim();
   });
   function launch() {
-    if(state!=='ready')return;
-    if(Math.hypot(pull.x,pull.y)<4){position={...anchor};paint();clearAim();return;}
+    if (Math.hypot(pull.x, pull.y) < 4) { resetPaper(); return; }
     const thrown = document.createElement('div');
-    thrown.className = 'photo-piece crumpled thrown-photo';
+    thrown.className = 'photo-piece';
     thrown.style.cssText = piece.style.cssText;
-    thrown.setAttribute('role','img');
-    thrown.setAttribute('aria-label',photos[chosenButton.dataset.photo].name + ' photo');
-    document.querySelector('.photo-pile').append(thrown);
-    flights.push({node:thrown, from:{...position}, end:landingPoint(), elapsed:0, size:{...photoSize}});
-    piece.hidden=true; pointer=null; clearAim(); instruction.hidden=true;
-    state='hidden';
-    status.textContent='Thrown! Choose a material or throw another.';
+    thrown.style.pointerEvents = 'none';
+    thrown.setAttribute('aria-hidden', 'true');
+    pile.append(thrown);
+    const size = Math.max(70, Math.min(238, innerWidth * .46, innerHeight * .42));
+    flights.push({node:thrown, from:{...position}, end:landingPoint(), elapsed:0, size});
+    resetPaper();
   }
   piece.addEventListener('pointerup', event => {
     if(event.pointerId!==pointer)return;
     if(piece.hasPointerCapture(pointer))piece.releasePointerCapture(pointer);
     pointer=null; launch();
   });
-  piece.addEventListener('pointercancel',()=>{
-    pointer=null; if(state==='ready'){position={...anchor};paint();clearAim();}
+  piece.addEventListener('pointercancel', event => {
+    if (event.pointerId === pointer) resetPaper();
   });
   piece.addEventListener('keydown',event=>{
-    if(state!=='ready')return;
     if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){
       event.preventDefault();
       if(event.key==='ArrowLeft')pull.x-=8;
@@ -105,6 +81,34 @@
       position={x:anchor.x+pull.x,y:anchor.y+pull.y};paint();drawAim();
     } else if(event.key==='Enter'||event.key===' '){event.preventDefault();launch();}
   });
+  function unfoldPaper(node, size) {
+    node.className = 'landed-photo';
+    node.style.setProperty('--land-size', size + 'px');
+    const opened = new Image();
+    opened.src = paper.open;
+    opened.alt = '';
+    node.append(opened);
+    if (reducedMotion.matches) return;
+
+    const closed = new Image();
+    closed.className = 'closed-paper';
+    closed.src = paper.closed;
+    closed.alt = '';
+    node.append(closed);
+    const timing = { duration: 580, easing: 'cubic-bezier(.2,.7,.3,1)' };
+    opened.animate([
+      { opacity: 0, transform: 'perspective(480px) rotateY(-54deg) rotateX(26deg) scale(.28,.34)', clipPath: 'inset(20% 26% 19% 24%)' },
+      { opacity: 1, transform: 'perspective(480px) rotateY(9deg) rotateX(-5deg) scale(1.025)', clipPath: 'inset(0%)', offset: .7 },
+      { opacity: 1, transform: 'perspective(480px) rotateY(0deg) rotateX(0deg) scale(1)', clipPath: 'inset(0%)' }
+    ], timing);
+    const collapse = closed.animate([
+      { opacity: 1, transform: 'scale(1)' },
+      { opacity: 1, transform: 'scale(1.08,.84)', offset: .2 },
+      { opacity: 0, transform: 'scale(1.24,.62) rotate(-9deg)', offset: .58 },
+      { opacity: 0, transform: 'scale(1.24,.62) rotate(-9deg)' }
+    ], timing);
+    collapse.onfinish = () => closed.remove();
+  }
   function update(dt){
     for(let i=flights.length-1;i>=0;i--){
       const flight=flights[i];
@@ -115,27 +119,7 @@
       node.style.top=(from.y+(end.y-from.y)*t)+'px';
       node.style.setProperty('--spin',(t*360)+'deg');
       if(t===1){
-        const folded = getComputedStyle(node);
-        const fromShape = {
-          width:folded.width, height:folded.height,
-          clipPath:folded.clipPath, borderRadius:folded.borderRadius,
-          backgroundSize:folded.backgroundSize,
-          transform:'translate(-50%, -50%) rotate(360deg)'
-        };
-        node.style.setProperty('--land-width',size.width*1.4+'px');
-        node.style.setProperty('--land-height',size.height*1.4+'px');
-        node.className='landed-photo';
-        const opened = getComputedStyle(node);
-        // Unfold the same object around its landing center, without moving it.
-        node.animate([fromShape, {
-          width:opened.width, height:opened.height,
-          clipPath:'polygon(0% 0%, 25% 0%, 50% 0%, 75% 0%, 100% 0%, 100% 50%, 100% 100%, 75% 100%, 50% 100%, 25% 100%, 0% 100%, 0% 75%, 0% 50%)',
-          borderRadius:'0px', backgroundSize:'auto 100%',
-          transform:'translate(-50%, -50%) rotate(360deg)'
-        }], {
-          duration:matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 550,
-          easing:'cubic-bezier(0.22, 0.61, 0.36, 1)'
-        });
+        unfoldPaper(node, size);
         flights.splice(i,1);
       }
     }
@@ -146,9 +130,5 @@
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.addEventListener('resize',()=>{
-    if(state==='ready'){
-      pointer=null;anchor={x:innerWidth/2,y:innerHeight*.83};position={...anchor};pull={x:0,y:0};paint();clearAim();
-    }
-  });
+  window.addEventListener('resize', resetPaper);
 })();

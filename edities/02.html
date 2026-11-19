@@ -4,79 +4,39 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
+  <link rel="preload" href="../images/dirty-paper-open.webp" as="image">
   <title>trashy photos | trashiseeintrashydays</title>
   <style>
     * { box-sizing: border-box; }
-    [hidden] { display: none !important; }
-    :root { --ball: clamp(44px, 7vmin, 76px); --photo-w: min(14.8svh, 120px); --photo-h: min(42svh, 340px); }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; }
-    .metal-choice {
-      position: fixed; left: 1rem; bottom: 0.35rem; z-index: 10;
-      padding: 0.5rem; border: 0; background: transparent; color: transparent;
-      font: 900 24px/1 Arial, Helvetica, sans-serif;
-      -webkit-text-stroke: 0.65px #fff; cursor: grab; touch-action: none; user-select: none;
-    }
-    .metal-choice span { display: block; transition: filter 220ms ease; }
-    .metal-choice[aria-pressed="false"] span { filter: blur(1.5px); }
-    button:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
+    :root { --ball: clamp(44px, 7vmin, 76px); }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
     .photo-piece {
-      background-image: var(--piece-image, url('../images/redbull-can.png'));
-      background-size: auto 100%; background-position: center; background-repeat: no-repeat;
-      background-color: transparent;
+      position: fixed; z-index: 5;
+      width: var(--ball); height: var(--ball);
+      padding: 0; border: 0;
+      background: transparent url('../images/dirty-paper-closed.webp') center / contain no-repeat;
+      transform: translate(-50%, -50%) rotate(var(--spin, 0deg));
+      cursor: grab; touch-action: none; user-select: none;
     }
-    .photo-piece {
-      position: fixed; top: 5svh; left: 50%; z-index: 5;
-      width: var(--photo-w); height: var(--photo-h);
-      padding: 0; border: 0; border-radius: 2px;
-      transform: translateX(-50%); touch-action: none; user-select: none;
-    }
-    .photo-piece.crumpled {
-      width: var(--ball); height: var(--ball); cursor: grab;
-      transform: translate(-50%,-50%) rotate(var(--spin,0deg));
-      clip-path: polygon(21% 3%,48% 0,68% 8%,87% 14%,100% 41%,91% 64%,95% 81%,70% 96%,45% 100%,26% 88%,6% 82%,0 54%,9% 31%);
-      border-radius: 35%;
-      background-size: auto 180%;
-    }
-    .photo-piece.crumpled:active { cursor: grabbing; }
+    button.photo-piece { left: 50%; top: 83%; }
+    button.photo-piece:active { cursor: grabbing; }
+    button.photo-piece:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
     .photo-pile { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
-    .thrown-photo { pointer-events: none; }
     .landed-photo {
-      position: absolute; width: var(--land-width); height: var(--land-height);
-      background: var(--piece-image) center / auto 100% no-repeat;
-      transform: translate(-50%, -50%); pointer-events: none;
+      position: absolute;
+      width: var(--land-size); aspect-ratio: 569 / 580;
+      transform: translate(-50%, -50%);
     }
+    .landed-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+    .landed-photo .closed-paper { width: var(--ball); height: var(--ball); inset: 50% auto auto 50%; translate: -50% -50%; }
     .aim-guide { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
     .aim-path { fill: none; stroke: #fff9; stroke-width: 1.5px; stroke-dasharray: 3 8; }
-    .aim-hint, .game-status {
-      position: fixed; left: 1rem; right: 1rem; text-align: center; pointer-events: none;
-      font: 0.75rem/1.4 sans-serif; color: #aaa; z-index: 8; margin: 0;
-    }
-    .aim-hint { top: 87svh; }
-    .game-status { top: 1rem; }
-    @media (prefers-reduced-motion: reduce) {
-      .metal-choice span { transition: none; }
-      .landed-photo { animation: none; }
-    }
-    .material-choices {
-      position: fixed; left: 0; right: 0; bottom: 0; height: 10svh; z-index: 10;
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center;
-    }
-    .material-choices .metal-choice { position: static; min-width: 0; height: 100%; padding: 0.25rem; text-align: center; font-size: clamp(12px, 2.8vw, 24px); }
   </style>
 </head>
 <body>
-  <div class="photo-pile" aria-label="Thrown photos"></div>
+  <div class="photo-pile" aria-label="Thrown paper"></div>
   <svg class="aim-guide" aria-hidden="true"><path class="aim-path"></path></svg>
-  <button class="photo-piece" type="button" aria-label="Metal can photo. When crumpled, drag back and release to throw. Arrow keys aim, Enter throws." hidden></button>
-  <nav class="material-choices" aria-label="Choose a photo">
-    <button class="metal-choice" data-photo="metal" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>METAL</span></button>
-
-    <button class="metal-choice" data-photo="plastic" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>PLASTIC</span></button>
-    <button class="metal-choice" data-photo="paper" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>PAPER</span></button>
-    <button class="metal-choice" data-photo="organic" type="button" title="Choose a material to aim and throw" aria-pressed="false"><span>ORGANIC</span></button>
-  </nav>
-  <p class="aim-hint" hidden>Drag back to aim, release to throw.</p>
-  <p class="game-status" role="status"></p>
-  <script src="../photos-game.js?v=ready-to-throw-1"></script>
+  <button class="photo-piece" type="button" aria-label="Throw paper. Drag back and release, or use the arrow keys to aim and Enter to throw."></button>
+  <script src="../photos-game.js?v=dirty-paper-1"></script>
 </body>
 </html>
