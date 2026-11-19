@@ -7,6 +7,10 @@
     straight: { name: 'Straight pasta', file: 'pasta-piece-2.webp', ratio: 125 / 598, ends: [[-.008, -.47], [.025, .47]] }
   };
   const pieces = [];
+  const bins = [...document.querySelectorAll('[data-bin]')];
+  const stock = { curved: 0, straight: 0 };
+  const hint = document.querySelector('.sort-hint');
+  const instructions = hint.textContent;
   const snapDistance = 22;
   const turn = Math.PI / 12;
   let selected;
@@ -79,13 +83,14 @@
     button.style.width = length * type.ratio + 'px';
     button.style.height = length + 'px';
     button.setAttribute('aria-label', type.name);
+    button.setAttribute('aria-keyshortcuts', 'B');
     button.setAttribute('aria-pressed', 'false');
     const image = new Image();
     image.src = '../images/' + type.file;
     image.alt = '';
     image.draggable = false;
     button.append(image);
-    const piece = { type, button, length, x, y, angle };
+    const piece = { key, type, button, length, x, y, angle };
     pieces.push(piece);
     board.insertBefore(button, rotate);
     paint(piece);
@@ -121,7 +126,9 @@
     piece.y = originY + event.clientY - y;
     constrain(piece);
     paint(piece);
-    const candidate = nearestJoin(piece, snapDistance);
+    const over = binAt(event);
+    highlightBin(over, piece.key);
+    const candidate = over ? null : nearestJoin(piece, snapDistance);
     join.hidden = !candidate;
     if (candidate) {
       join.style.left = candidate.target.x + 'px';
@@ -131,10 +138,25 @@
 
   function endMove(event) {
     if (gesture?.pointer !== event.pointerId) return;
-    const { piece, moved } = gesture;
+    const { piece, moved, originX, originY } = gesture;
     gesture = null;
     join.hidden = true;
-    if (moved && event.type === 'pointerup') align(piece, nearestJoin(piece, snapDistance));
+    highlightBin(null);
+    if (moved && event.type === 'pointerup') {
+      const bin = binAt(event);
+      if (bin) {
+        if (bin.dataset.bin === piece.key) {
+          sortPiece(piece, bin);
+          return;
+        }
+        piece.x = originX;
+        piece.y = originY;
+        hint.textContent = 'That goes in the ' + piece.key + ' bin.';
+      } else {
+        hint.textContent = instructions;
+        align(piece, nearestJoin(piece, snapDistance));
+      }
+    }
     paint(piece);
   }
 
@@ -145,7 +167,10 @@
       pieces.splice(pieces.indexOf(piece), 1);
       piece.button.remove();
       select(null);
-      document.querySelector('[data-add]').focus();
+      bins[0].focus();
+    } else if (event.key.toLowerCase() === 'b') {
+      event.preventDefault();
+      sortPiece(piece, bins.find(bin => bin.dataset.bin === piece.key));
     } else if (offsets[event.key]) {
       event.preventDefault();
       const [x, y] = offsets[event.key];
@@ -211,12 +236,54 @@
   board.addEventListener('pointerdown', event => {
     if (event.target === board && !gesture) select(null);
   });
-  document.querySelectorAll('[data-add]').forEach(button => {
-    button.addEventListener('click', () => {
-      const piece = createPiece(button.dataset.add, board.clientWidth * .5 + (pieces.length % 3 - 1) * 20, board.clientHeight * .69);
+  function binAt(event) {
+    return bins.find(bin => {
+      const rect = bin.getBoundingClientRect();
+      return event.clientX >= rect.left && event.clientX <= rect.right &&
+        event.clientY >= rect.top && event.clientY <= rect.bottom;
+    });
+  }
+
+  function highlightBin(target, key) {
+    for (const bin of bins) {
+      if (bin === target) bin.dataset.target = bin.dataset.bin === key ? 'match' : 'wrong';
+      else delete bin.dataset.target;
+    }
+  }
+
+  function updateCount(bin) {
+    const key = bin.dataset.bin;
+    const count = stock[key];
+    const label = count + (count === 1 ? ' piece' : ' pieces');
+    bin.querySelector('.bin-count').textContent = label;
+    bin.setAttribute('aria-label', types[key].name + ' bin, ' + label);
+  }
+
+  function sortPiece(piece, bin) {
+    pieces.splice(pieces.indexOf(piece), 1);
+    select(null);
+    piece.button.remove();
+    stock[piece.key] += 1;
+    updateCount(bin);
+    hint.textContent = instructions;
+    bin.focus({ preventScroll: true });
+  }
+
+  for (const bin of bins) {
+    bin.addEventListener('click', () => {
+      const key = bin.dataset.bin;
+      if (stock[key] === 0) {
+        hint.textContent = 'The ' + key + ' bin is empty. Drag a matching piece into it first.';
+        return;
+      }
+      stock[key] -= 1;
+      updateCount(bin);
+      hint.textContent = instructions;
+      const piece = createPiece(key, board.clientWidth * .63, board.clientHeight * .7);
       piece.button.focus({ preventScroll: true });
     });
-  });
+  }
+
   window.addEventListener('resize', () => {
     const width = board.clientWidth;
     const height = board.clientHeight;
@@ -228,8 +295,19 @@
     boardSize = { width, height };
   });
 
-  const curved = createPiece('curved', boardSize.width * .45, boardSize.height * .39, .52);
-  const straight = createPiece('straight', boardSize.width * .55, boardSize.height * .39, -.65);
-  align(straight, { own: 0, target: endpoint(curved, 0) });
-  paint(straight);
+  const mix = ['curved', 'straight', 'curved', 'straight', 'curved', 'straight',
+    'curved', 'straight', 'curved', 'straight', 'curved', 'straight'];
+  for (let index = mix.length - 1; index > 0; index--) {
+    const other = Math.floor(Math.random() * (index + 1));
+    [mix[index], mix[other]] = [mix[other], mix[index]];
+  }
+  const compact = boardSize.width < 640;
+  const spread = Math.min(77, boardSize.width * .16, boardSize.height * .17);
+  const centerX = boardSize.width * (compact ? .5 : .26);
+  const centerY = boardSize.height * (compact ? .33 : .44);
+  mix.forEach((key, index) => {
+    const x = centerX + (index % 4 - 1.5 + (Math.random() - .5) * .45) * spread;
+    const y = centerY + (Math.floor(index / 4) - 1 + (Math.random() - .5) * .45) * spread;
+    createPiece(key, x, y, Math.random() * Math.PI * 2);
+  });
 })();

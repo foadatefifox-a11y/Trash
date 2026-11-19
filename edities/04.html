@@ -34,6 +34,17 @@
       border: 1px solid #48433b; border-radius: .45rem; color: inherit; background: #12110f; cursor: pointer;
     }
     .picker button:hover { border-color: #f8dc85; }
+    .picker .bin {
+      width: min(150px, 42vw); height: 65px;
+      display: grid; grid-template-columns: 36px 1fr; gap: .2rem;
+      border: 1px solid #665a40; border-top: 3px solid #b59656;
+      border-radius: .2rem .2rem .65rem .65rem; padding: .3rem .65rem;
+      text-align: left; background: #17140e;
+    }
+    .bin-copy { display: grid; gap: .15rem; }
+    .bin-count { font-size: .75rem; color: #ccc; }
+    .picker .bin[data-target="match"] { background: #39301a; border-color: #f8dc85; }
+    .picker .bin[data-target="wrong"] { background: #381c17; border-color: #ec937e; }
     .picker img { display: block; height: 42px; width: auto; pointer-events: none; }
   </style>
 </head>
@@ -47,12 +58,18 @@
     </button>
   </main>
   <footer class="tools">
-    <p>Drag pieces together to snap. Select a piece to rotate it.</p>
-    <div class="picker" aria-label="Add pasta">
-      <button type="button" data-add="curved" aria-label="Add curved pasta" title="Add curved pasta"><img src="../images/pasta-piece-1.webp" alt=""></button>
-      <button type="button" data-add="straight" aria-label="Add straight pasta" title="Add straight pasta"><img src="../images/pasta-piece-2.webp" alt=""></button>
+    <p class="sort-hint" role="status">Drag pasta into its matching bin, or build on the canvas. Click a bin to take a piece back.</p>
+    <div class="picker" aria-label="Pasta sorting bins">
+      <button class="bin" type="button" data-bin="curved" aria-label="Curved pasta bin, 0 pieces" title="Take a curved piece from this bin">
+        <img src="../images/pasta-piece-1.webp" alt="">
+        <span class="bin-copy">Curved bin <span class="bin-count">0 pieces</span></span>
+      </button>
+      <button class="bin" type="button" data-bin="straight" aria-label="Straight pasta bin, 0 pieces" title="Take a straight piece from this bin">
+        <img src="../images/pasta-piece-2.webp" alt="">
+        <span class="bin-copy">Straight bin <span class="bin-count">0 pieces</span></span>
+      </button>
     </div>
   </footer>
-  <script src="pasta-design.js" defer></script>
+  <script src="pasta-design.js?v=sorting-1" defer></script>
 </body>
 </html>
