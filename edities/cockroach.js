@@ -1,8 +1,9 @@
 const cockroach = document.querySelector('.cockroach');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const roaches = [];
-const maximum = 5;
-const increaseEvery = 8000;
+const initialCount = 4;
+const maximum = 10;
+const increaseEvery = 4000;
 let started;
 let timer;
 let stopped = false;
@@ -66,11 +67,11 @@ function run(roach) {
 function updateSwarm() {
   if (stopped || document.hidden) return;
   const now = performance.now();
-  const count = Math.min(maximum, 1 + Math.floor((now - started) / increaseEvery));
+  const count = Math.min(maximum, initialCount + Math.floor((now - started) / increaseEvery));
   while (roaches.length < count) {
     const image = roaches.length === 0 ? cockroach : cockroach.cloneNode();
     if (image !== cockroach) cockroach.after(image);
-    roaches.push({ image, animation: null, readyAt: now });
+    roaches.push({ image, animation: null, readyAt: now + (roaches.length < initialCount ? roaches.length * 160 : 0) });
   }
   for (const roach of roaches) {
     if (!roach.animation && roach.readyAt <= now) run(roach);
