@@ -2,7 +2,7 @@ const cockroach = document.querySelector('.cockroach');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const interval = 10_000;
 let nextSighting = Date.now() + interval;
-let missedSighting = false;
+let missedSighting = true;
 
 function scurry() {
 
@@ -64,5 +64,10 @@ function checkSighting() {
   }
 }
 
-window.setInterval(checkSighting, interval);
+function startSightings() {
+  window.setTimeout(checkSighting, 450);
+  window.setInterval(checkSighting, interval);
+}
+
+cockroach.decode().then(startSightings, startSightings);
 document.addEventListener('visibilitychange', checkSighting);
