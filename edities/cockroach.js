@@ -8,8 +8,7 @@ let started;
 let timer;
 let stopped = false;
 
-function scurry(cockroach) {
-
+function scurry(cockroach, direction) {
   const width = window.innerWidth;
   const height = window.innerHeight;
   if (reducedMotion.matches) {
@@ -27,10 +26,22 @@ function scurry(cockroach) {
   const end = span * (0.15 + Math.random() * 0.7);
   const segments = 14;
 
+  const opening = direction !== undefined;
+  const rayX = opening ? Math.cos(direction) : 0;
+  const rayY = opening ? Math.sin(direction) : 0;
+  const exit = opening ? Math.min(
+    (width / 2 + margin) / Math.abs(rayX),
+    (height / 2 + margin) / Math.abs(rayY)
+  ) : distance;
+
   const points = Array.from({ length: segments + 1 }, (_, index) => {
     const progress = index / segments;
-    const along = -margin + (distance + margin * 2) * (reverse ? 1 - progress : progress);
     const drift = Math.sin(progress * Math.PI) * (Math.random() - 0.5) * 55;
+    if (opening) {
+      const travel = 16 + (exit - 16) * progress;
+      return [width / 2 + rayX * travel - rayY * drift, height / 2 + rayY * travel + rayX * drift];
+    }
+    const along = -margin + (distance + margin * 2) * (reverse ? 1 - progress : progress);
     const across = start + (end - start) * progress + drift;
     return horizontal ? [along, across] : [across, along];
   });
@@ -50,15 +61,21 @@ function scurry(cockroach) {
     };
   });
 
-  const duration = Math.min(2050, Math.max(900, distance * 1.45)) * (0.82 + Math.random() * 0.36);
-  return cockroach.animate(frames, { duration, easing: 'linear' });
+  const duration = Math.min(2050, Math.max(900, exit * 1.45)) * (0.82 + Math.random() * 0.36);
+  return cockroach.animate(frames, { duration, easing: opening ? 'ease-out' : 'linear' });
 }
 
-function run(roach) {
+function run(roach, direction) {
   if (stopped || document.hidden) return;
-  const animation = scurry(roach.image);
+  const animation = scurry(roach.image, direction);
   roach.animation = animation;
   animation.onfinish = () => {
+    if (direction !== undefined) {
+      roach.image.remove();
+      roaches.splice(roaches.indexOf(roach), 1);
+      if (!roaches.length && !stopped) startSwarm();
+      return;
+    }
     roach.animation = null;
     roach.readyAt = performance.now() + 220 + Math.random() * 430;
   };
@@ -70,7 +87,7 @@ function updateSwarm() {
   const count = Math.min(maximum, initialCount + Math.floor((now - started) / increaseEvery));
   while (roaches.length < count) {
     const image = roaches.length === 0 ? cockroach : cockroach.cloneNode();
-    if (image !== cockroach) cockroach.after(image);
+    if (!image.isConnected) document.querySelector('.materials').after(image);
     roaches.push({ image, animation: null, readyAt: now + (roaches.length < initialCount ? roaches.length * 160 : 0) });
   }
   for (const roach of roaches) {
@@ -106,11 +123,28 @@ window.trashyRoaches = {
   }
 };
 
-function start() {
+function startSwarm() {
   if (stopped) return;
   started = performance.now();
   updateSwarm();
   timer = window.setInterval(updateSwarm, 150);
 }
 
-cockroach.decode().then(start, start);
+function openWithScatter() {
+  if (stopped) return;
+  if (document.hidden) {
+    document.addEventListener('visibilitychange', openWithScatter, { once: true });
+    return;
+  }
+  const offset = Math.random() * 2 * Math.PI;
+  for (let index = 0; index < maximum; index++) {
+    const image = index === 0 ? cockroach : cockroach.cloneNode();
+    if (image !== cockroach) cockroach.after(image);
+    const roach = { image, animation: null };
+    roaches.push(roach);
+    const direction = offset + (index + Math.random() * .28) * 2 * Math.PI / maximum;
+    run(roach, direction);
+  }
+}
+
+cockroach.decode().then(openWithScatter, openWithScatter);

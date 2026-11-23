@@ -72,7 +72,7 @@
   function paint(letter) {
     letter.node.setAttribute('transform', `translate(${letter.x} ${letter.y})`);
   }
-  function touches(x1, y1, x2, y2, r, blocked) {
+  function touches(x1, y1, x2, y2, r) {
     // Segment/expanded-rectangle intersection catches fast sweeping strokes.
     let low = 0, high = 1;
     for (const [a, delta, min, max] of [[x1,x2-x1,r.left-10,r.right+10],[y1,y2-y1,r.top-10,r.bottom+10]]) {
@@ -84,38 +84,64 @@
         if (low > high) return false;
       }
     }
-    const steps = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) * (high - low) / 5));
-    for (let index = 0; index <= steps; index++) {
-      const t = low + (high - low) * index / steps;
-      if (!blocked(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return true;
-    }
-    return false;
+    return true;
   }
+
+  function detachLetters() {
+    letters.forEach(letter => { letter.attached = false; });
+  }
+
+  function sweepSpan(from, to) {
+    const a = point(from.x, from.y);
+    const b = point(to.x, to.y);
+    let moved = false;
+    for (const letter of letters) {
+      if (letter.gone) continue;
+      if (!letter.attached) {
+        const rect = letter.node.getBoundingClientRect();
+        letter.attached = touches(from.x, from.y, to.x, to.y, rect);
+      }
+      if (letter.attached && (a.x !== b.x || a.y !== b.y)) {
+        letter.x += b.x - a.x;
+        letter.y += b.y - a.y;
+        paint(letter);
+        moved = true;
+      }
+    }
+    return moved;
+  }
+
   function move(event) {
     if (!target || event.pointerId !== pointer) return;
     event.preventDefault();
-    const a = point(previous.x, previous.y), b = point(event.clientX, event.clientY);
+    const next = { x: event.clientX, y: event.clientY };
+    const dx = next.x - previous.x;
+    const dy = next.y - previous.y;
+    const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 4));
     const blocked = window.trashyRoaches?.getBlocker() ?? (() => false);
-    const covered = blocked(event.clientX, event.clientY);
+    let start = null;
+    let lastClear;
     let moved = false;
-    letters.forEach(letter => {
-      if (letter.gone) return;
-      const rect = letter.node.getBoundingClientRect();
-      if (!letter.attached && touches(previous.x, previous.y, event.clientX, event.clientY, rect, blocked)) letter.attached = true;
-      if (covered) {
-        letter.attached = false;
-        return;
+
+    // Each clear stretch can pick up letters independently. A covered stretch
+    // breaks the grab even when the pointer jumps across it between events.
+    for (let index = 0; index <= steps; index++) {
+      const t = index / steps;
+      const sample = { x: previous.x + dx * t, y: previous.y + dy * t };
+      if (blocked(sample.x, sample.y)) {
+        if (start) moved = sweepSpan(start, lastClear) || moved;
+        start = null;
+        detachLetters();
+      } else {
+        start ??= sample;
+        lastClear = sample;
       }
-      if (letter.attached) {
-        letter.x += b.x-a.x; letter.y += b.y-a.y; paint(letter);
-        if (b.x !== a.x || b.y !== a.y) moved = true;
-      }
-    });
-    if (moved) {
-      window.cleanupAudio?.move(target.dataset.material);
     }
+
+    if (start) moved = sweepSpan(start, lastClear) || moved;
+    if (moved) window.cleanupAudio?.move(target.dataset.material);
     else window.cleanupAudio?.stop();
-    previous = {x: event.clientX, y: event.clientY};
+    previous = next;
   }
   document.addEventListener('pointerdown', event => {
     if (event.button !== 0 || event.target.closest('.material[aria-pressed="false"]')) return;
@@ -128,17 +154,24 @@
   }, {passive:false});
   document.addEventListener('pointermove', move, {passive:false});
   function release(event) {
-    window.cleanupAudio?.stop();
     if (!target || event.pointerId !== pointer) return;
+    if (previous.x !== event.clientX || previous.y !== event.clientY) move(event);
+    window.cleanupAudio?.stop();
+    const blocked = window.trashyRoaches?.getBlocker();
+    if (blocked?.(event.clientX, event.clientY)) detachLetters();
     const svg = target.querySelector('svg');
     const matrix = svg.getScreenCTM();
     // Finish a stroke at the screen edge so letters can be swept fully out.
     const edge = event.clientX < 24 ? -1 : event.clientX > innerWidth-24 ? 1 : 0;
     letters.forEach(letter => {
-      if (letter.attached && edge) {
+      if (letter.gone) return;
+      const rect = letter.node.getBoundingClientRect();
+      const outside = rect.right < 0 ? -1 : rect.left > innerWidth ? 1 : 0;
+      const exit = outside || (letter.attached ? edge : 0);
+      if (exit) {
         letter.gone = true;
         const start = performance.now(), from = letter.x;
-        const distance = edge * (innerWidth + letter.node.getBoundingClientRect().width + 20) / matrix.a;
+        const distance = exit * (innerWidth + rect.width + 20) / matrix.a;
         const animate = now => {
           const t = Math.min(1, (now-start)/250);
           letter.x = from + distance*t; paint(letter);
