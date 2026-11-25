@@ -8,9 +8,9 @@
   <link rel="preload" href="images/trash-bin-a-sequence.webp" as="image">
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; min-height: 100svh; background: #000; color: #fff; display: grid; place-items: center; }
-    .artboard { position: relative; width: min(100vw, 177.7778svh); aspect-ratio: 16 / 9; overflow: hidden; }
-    .home-artwork { display: block; width: 100%; height: auto; }
+    body { margin: 0; min-height: 100vh; min-height: 100dvh; background: #000; color: #fff; display: grid; place-items: center; }
+    .artboard { position: relative; width: min(100vw, 177.7778dvh); aspect-ratio: 16 / 9; overflow: hidden; }
+    .home-artwork { display: block; width: 100%; height: auto; clip-path: inset(0 .15%); }
     .art-layer { position: absolute; pointer-events: none; }
     .clean-r { left: 30.67708%; top: 8.24074%; width: 11.92708%; height: 32.40741%; opacity: 0; animation: alternate-r 2s steps(1, end) infinite; }
     @keyframes alternate-r { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
