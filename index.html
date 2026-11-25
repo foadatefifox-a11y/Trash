@@ -5,75 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>trashiseeintrashydays</title>
+  <link rel="preload" href="images/trash-bin-a-sequence.webp" as="image">
   <style>
     * { box-sizing: border-box; }
-    body {
-      min-height: 100vh; min-height: 100svh;
-      margin: 0; background: #000; color: #fff;
-      display: flex; flex-direction: column; justify-content: space-between;
-      align-items: center; gap: 2rem; padding: 8svh 0 4svh;
+    body { margin: 0; min-height: 100vh; min-height: 100svh; background: #000; color: #fff; display: grid; place-items: center; }
+    .artboard { position: relative; width: min(100vw, 177.7778svh); aspect-ratio: 16 / 9; overflow: hidden; }
+    .home-artwork { display: block; width: 100%; height: auto; }
+    .art-layer { position: absolute; pointer-events: none; }
+    .clean-r { left: 30.67708%; top: 8.24074%; width: 11.92708%; height: 32.40741%; opacity: 0; animation: alternate-r 2s steps(1, end) infinite; }
+    @keyframes alternate-r { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+    .yellow-a, .yellow-a-next {
+      left: 42.86458%; top: 8.24074%; width: 15.3125%; height: 32.40741%;
+      background: url('images/trash-bin-a-sequence.webp') no-repeat 0 50% / 100% 900%;
     }
-    .letters { position: relative; width: 90%; }
-    .letters img { display: block; }
-    .letter-art { width: 100%; height: auto; }
-    .alternate-a {
-      position: absolute; top: 0; left: 39.24855%; width: 23.06358%; height: auto;
-      opacity: 0; pointer-events: none;
-      animation: blink-a 2s steps(1, end) infinite;
+    .yellow-a-next { clip-path: inset(0 0 100%); }
+    .t-track {
+      left: 16.98839%; top: 8.44741%; width: 13.29635%; height: 31.927%; overflow: hidden;
+      clip-path: polygon(0 0, 100% 0, 100% 10.975%, 58.72% 10.975%, 58.72% 100%, 41.09% 100%, 41.09% 10.975%, 0 10.975%);
     }
-    @keyframes blink-a {
-      0%, 100% { opacity: 0; }
-      50% { opacity: 1; }
-    }
+    .t-roach { position: absolute; width: 10%; height: auto; opacity: 0; }
     .letter-link {
-      position: absolute; inset-block: 0; left: var(--left); width: var(--width);
-      color: #fff; display: grid; place-items: center; text-decoration: none;
+      position: absolute; top: 8.24%; height: 32.41%;
+      left: var(--left); width: var(--width); text-decoration: none;
     }
     .letter-link:focus-visible { outline: none; }
     .letter-label {
-      position: absolute;
-      top: var(--label-y, 50%); left: var(--label-x, 50%);
-      transform: translate(-50%, -50%);
-      height: clamp(17px, 1.85vw, 22px); width: auto;
+      display: block; position: absolute; top: var(--label-y, 50%); left: var(--label-x, 50%);
+      transform: translate(-50%, -50%); height: clamp(17px, 1.85vw, 22px); width: auto;
       opacity: 0; pointer-events: none;
       filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 2px #000);
     }
     .letter-link:hover .letter-label, .letter-link:focus-visible .letter-label { opacity: 1; }
-    .quote { display: block; width: clamp(16rem, 51%, 61rem); max-width: 90%; height: auto; }
+    @media (prefers-reduced-motion: reduce) {
+      .clean-r { animation: none; }
+    }
   </style>
+  <script src="trash-home.js" defer></script>
 </head>
 <body>
-  <nav class="letters" aria-label="Trash editions">
-    <img class="letter-art" src="images/trash-letters.webp" alt="TRASH" width="1730" height="479">
-    <img class="alternate-a" src="images/trash-a-second-artboard.webp" alt="" width="399" height="479">
-    <a class="letter-link" style="--left: 0%; --width: 20.7%" href="edities/01.html"><img class="letter-label" src="images/letter-label-text.png" alt="Trashy Text"></a>
-    <a class="letter-link" style="--left: 20.7%; --width: 18.55%" href="edities/02.html"><img class="letter-label" src="images/letter-label-photos.png" alt="Trashy Photos"></a>
-    <a class="letter-link" style="--left: 39.25%; --width: 23.2%" href="edities/03.html"><img class="letter-label" src="images/letter-label-screens.png" alt="Trashy Screens"></a>
-    <a class="letter-link" style="--left: 62.45%; --width: 16.7%" href="edities/04.html"><img class="letter-label" src="images/letter-label-design.png" alt="Trashy Design"></a>
-  </nav>
-  <img class="quote" src="images/trash-quote.webp" alt="One man's rubbish may be another's treasure" width="972" height="96">
-  <script>
-    document.querySelectorAll('.letter-link').forEach(link => {
-      const label = link.querySelector('.letter-label');
-
-      function followPointer(event) {
-        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
-        const bounds = link.getBoundingClientRect();
-        const half = label.offsetWidth / 2;
-        const x = Math.max(half + 4, Math.min(innerWidth - half - 4, event.clientX + 8));
-        const below = event.clientY + 15;
-        const y = below + label.offsetHeight / 2 < innerHeight ? below : event.clientY - 15;
-        label.style.setProperty('--label-x', (x - bounds.left) + 'px');
-        label.style.setProperty('--label-y', (y - bounds.top) + 'px');
-      }
-
-      link.addEventListener('pointerenter', followPointer);
-      link.addEventListener('pointermove', followPointer);
-      link.addEventListener('pointerleave', () => {
-        label.style.removeProperty('--label-x');
-        label.style.removeProperty('--label-y');
-      });
-    });
-  </script>
+  <main class="artboard">
+    <img class="home-artwork" src="images/trash-bin-home.webp" alt="TRASH BIN. One man's rubbish may be another's trash." width="1920" height="1080">
+    <div class="art-layer t-track" aria-hidden="true"></div>
+    <img class="art-layer clean-r" src="images/trash-bin-r-clean.webp" alt="" width="229" height="350">
+    <div class="art-layer yellow-a" aria-hidden="true"></div>
+    <div class="art-layer yellow-a-next" aria-hidden="true"></div>
+    <nav aria-label="Trash editions">
+      <a class="letter-link" style="--left: 16.98%; --width: 13.36%" href="edities/01.html"><img class="letter-label" src="images/letter-label-text.png" alt="Trashy Text"></a>
+      <a class="letter-link" style="--left: 30.68%; --width: 11.93%" href="edities/02.html"><img class="letter-label" src="images/letter-label-photos.png" alt="Trashy Photos"></a>
+      <a class="letter-link" style="--left: 42.86%; --width: 15.32%" href="edities/03.html"><img class="letter-label" src="images/letter-label-screens.png" alt="Trashy Screens"></a>
+      <a class="letter-link" style="--left: 58.55%; --width: 10.78%" href="edities/04.html"><img class="letter-label" src="images/letter-label-design.png" alt="Trashy Design"></a>
+    </nav>
+  </main>
 </body>
 </html>
