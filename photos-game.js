@@ -164,11 +164,11 @@
       document.body.append(tossed);
       const dx = end.x - position.x;
       const dy = end.y - position.y;
-      const duration = Math.min(640, Math.max(300, Math.hypot(dx, dy) / (1.4 + Math.hypot(pull.x, pull.y) / 55)));
+      const duration = Math.min(2050, Math.max(950, Math.hypot(dx, dy) / (0.62 + Math.hypot(pull.x, pull.y) / 190)));
       const flight = tossed.animate([
-        { transform: 'translate(-50%, -50%) rotate(0deg) scale(1)', opacity: 1 },
-        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${dx < 0 ? -420 : 420}deg) scale(.58)`, opacity: 0 }
-      ], { duration, easing: 'cubic-bezier(.12,.65,.48,1)', fill: 'forwards' });
+        { transform: 'translate(-50%, -50%) rotate(0deg) scale(1)' },
+        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${dx < 0 ? -420 : 420}deg) scale(.8)` }
+      ], { duration, easing: 'cubic-bezier(.3,.12,.7,.88)', fill: 'forwards' });
       flight.onfinish = () => tossed.remove();
     }
     piece.hidden = true;
