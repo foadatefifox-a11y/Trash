@@ -1,9 +1,10 @@
 const cockroach = document.querySelector('.cockroach');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const roaches = [];
-const initialCount = 4;
-const maximum = 10;
-const increaseEvery = 4000;
+const openingCount = 18;
+const initialCount = 7;
+const maximum = 13;
+const increaseEvery = 3000;
 let started;
 let timer;
 let stopped = false;
@@ -105,7 +106,7 @@ function getBlocker() {
   });
   return (x, y) => bodies.some(({transform, halfWidth, halfHeight}) => {
     const local = new DOMPoint(x - halfWidth, y - halfHeight).matrixTransform(transform);
-    return (local.x / (halfWidth * .57)) ** 2 + ((local.y - halfHeight * .12) / (halfHeight * .76)) ** 2 <= 1;
+    return (local.x / (halfWidth * .66)) ** 2 + ((local.y - halfHeight * .12) / (halfHeight * .83)) ** 2 <= 1;
   });
 }
 
@@ -137,12 +138,12 @@ function openWithScatter() {
     return;
   }
   const offset = Math.random() * 2 * Math.PI;
-  for (let index = 0; index < maximum; index++) {
+  for (let index = 0; index < openingCount; index++) {
     const image = index === 0 ? cockroach : cockroach.cloneNode();
     if (image !== cockroach) cockroach.after(image);
     const roach = { image, animation: null };
     roaches.push(roach);
-    const direction = offset + (index + Math.random() * .28) * 2 * Math.PI / maximum;
+    const direction = offset + (index + Math.random() * .28) * 2 * Math.PI / openingCount;
     run(roach, direction);
   }
 }

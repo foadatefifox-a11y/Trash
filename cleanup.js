@@ -1,6 +1,7 @@
 (() => {
   const ns = 'http://www.w3.org/2000/svg';
   let target, original, letters = [], pointer = null, previous;
+  let recoveryDistance = 0;
   const point = (x, y) => new DOMPoint(x, y).matrixTransform(target.querySelector('svg').getScreenCTM().inverse());
 
   function reset() {
@@ -75,7 +76,7 @@
   function touches(x1, y1, x2, y2, r) {
     // Segment/expanded-rectangle intersection catches fast sweeping strokes.
     let low = 0, high = 1;
-    for (const [a, delta, min, max] of [[x1,x2-x1,r.left-10,r.right+10],[y1,y2-y1,r.top-10,r.bottom+10]]) {
+    for (const [a, delta, min, max] of [[x1,x2-x1,r.left-5,r.right+5],[y1,y2-y1,r.top-5,r.bottom+5]]) {
       if (!delta) { if (a < min || a > max) return false; }
       else {
         let from = (min-a)/delta, to = (max-a)/delta;
@@ -117,7 +118,8 @@
     const next = { x: event.clientX, y: event.clientY };
     const dx = next.x - previous.x;
     const dy = next.y - previous.y;
-    const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 4));
+    const length = Math.hypot(dx, dy);
+    const steps = Math.max(1, Math.ceil(length / 4));
     const blocked = window.trashyRoaches?.getBlocker() ?? (() => false);
     let start = null;
     let lastClear;
@@ -132,6 +134,9 @@
         if (start) moved = sweepSpan(start, lastClear) || moved;
         start = null;
         detachLetters();
+        recoveryDistance = 18;
+      } else if (recoveryDistance > 0) {
+        recoveryDistance = Math.max(0, recoveryDistance - length / steps);
       } else {
         start ??= sample;
         lastClear = sample;
@@ -147,6 +152,7 @@
     if (event.button !== 0 || event.target.closest('.material[aria-pressed="false"]')) return;
     if (pointer !== null || !prepareCleanup() || letters.every(letter => letter.gone)) return;
     pointer = event.pointerId;
+    recoveryDistance = 0;
     previous = {x:event.clientX,y:event.clientY};
     event.preventDefault();
     target.setPointerCapture(pointer);
