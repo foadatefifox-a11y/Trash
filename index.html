@@ -36,6 +36,16 @@
       filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 2px #000);
     }
     .letter-link:hover .letter-label, .letter-link:focus-visible .letter-label { opacity: 1; }
+    @media (max-width: 650px) and (orientation: portrait) {
+      .artboard { width: min(100vw, 46.18227dvh); aspect-ratio: 1125 / 2436; }
+      .t-track { left: 41.36560%; top: 3.82902%; width: 17.26880%; height: 10.77167%; }
+      .clean-r { left: 42.23920%; top: 14.53227%; width: 15.49040%; height: 10.93350%; }
+      .yellow-a, .yellow-a-next { left: 40.03947%; top: 25.31252%; width: 19.88711%; height: 10.93350%; }
+      .letter-link:nth-child(1) { left: 41.33333%; top: 3.81773%; width: 17.33333%; height: 10.75534%; }
+      .letter-link:nth-child(2) { left: 42.22222%; top: 14.57307%; width: 15.55556%; height: 10.79639%; }
+      .letter-link:nth-child(3) { left: 40.00000%; top: 25.36946%; width: 20.00000%; height: 10.75534%; }
+      .letter-link:nth-child(4) { left: 42.93333%; top: 36.12479%; width: 14.04444%; height: 10.79639%; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .clean-r { animation: none; }
     }
@@ -44,7 +54,10 @@
 </head>
 <body>
   <main class="artboard">
-    <img class="home-artwork" src="images/trash-bin-revised.webp" alt="TRASH BIN. One man's rubbish may be another's trash." width="1920" height="1080">
+    <picture>
+      <source media="(max-width: 650px) and (orientation: portrait)" srcset="images/trash-bin-phone.webp" width="1125" height="2436">
+      <img class="home-artwork" src="images/trash-bin-revised.webp" alt="TRASH BIN. One man's rubbish may be another's trash." width="1920" height="1080">
+    </picture>
     <div class="art-layer t-track" aria-hidden="true"></div>
     <img class="art-layer clean-r" src="images/trash-bin-r-clean.webp" alt="" width="229" height="350">
     <div class="art-layer yellow-a" aria-hidden="true"></div>
