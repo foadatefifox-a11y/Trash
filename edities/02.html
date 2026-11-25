@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <link rel="preload" href="../images/dirty-paper-open.webp" as="image">
+  <link rel="preload" href="../images/dirty-paper-closed.webp" as="image">
   <title>trashy photos | trashiseeintrashydays</title>
   <style>
     * { box-sizing: border-box; }
@@ -22,22 +23,39 @@
     button.photo-piece { left: 50%; top: 83%; }
     button.photo-piece:active { cursor: grabbing; }
     button.photo-piece:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
-    .photo-pile { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
-    .landed-photo {
-      position: absolute;
-      width: var(--land-size); aspect-ratio: 569 / 580;
-      transform: translate(-50%, -50%);
+    [hidden] { display: none !important; }
+    .poster-wall {
+      position: fixed; inset: 3% 3% 4%; display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-rows: repeat(4, minmax(0, 1fr));
+      gap: 2%; justify-items: center; align-items: center;
     }
-    .landed-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-    .landed-photo .closed-paper { width: var(--ball); height: var(--ball); inset: 50% auto auto 50%; translate: -50% -50%; }
+    .wall-poster {
+      display: grid; place-items: center; width: 100%; height: 100%; min-height: 0; min-width: 0;
+      padding: 0; border: 0; background: none; cursor: grab; touch-action: manipulation;
+      transform: translate(var(--offset-x), var(--offset-y)) rotate(var(--angle)) scale(var(--size));
+      filter: drop-shadow(1px 3px 3px #0009);
+    }
+    .wall-poster[hidden] { display: grid !important; visibility: hidden; }
+    .wall-poster img { display: block; width: 94%; height: 94%; object-fit: contain; pointer-events: none; }
+    .wall-poster:hover img { filter: brightness(1.12); }
+    .wall-poster:focus-visible { outline: 1px solid #fff; }
+    .peeling {
+      position: fixed; z-index: 6; transform: translate(-50%, -50%);
+      pointer-events: none; filter: drop-shadow(2px 6px 7px #0009);
+    }
+    .peeling img { position: absolute; display: block; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+    @media (max-width: 650px) {
+      .poster-wall { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); }
+    }
     .aim-guide { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
     .aim-path { fill: none; stroke: #fff9; stroke-width: 1.5px; stroke-dasharray: 3 8; }
   </style>
 </head>
 <body>
-  <div class="photo-pile" aria-label="Thrown paper"></div>
+  <main class="poster-wall" aria-label="Posters on the wall"></main>
   <svg class="aim-guide" aria-hidden="true"><path class="aim-path"></path></svg>
-  <button class="photo-piece" type="button" aria-label="Throw paper. Drag back and release, or use the arrow keys to aim and Enter to throw."></button>
-  <script src="../photos-game.js?v=dirty-paper-1"></script>
+  <button class="photo-piece" type="button" aria-label="Throw paper. Drag back and release, or use the arrow keys to aim and Enter to throw." hidden></button>
+  <script src="../photos-game.js?v=peel-throw-1"></script>
 </body>
 </html>
